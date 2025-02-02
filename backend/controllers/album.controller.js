@@ -26,16 +26,20 @@ export const getAlbum = async (req, res) => {
 };
 
 export const createAlbum = async (req, res) => {
-  const album = req.body; // user will send this data
-
-  if(!album.image || !album.title ) {
-    return res.status(404).json({success: false, message: 'Please provide all fields'});
-  }
-
-  const newAlbum = new Album(album);
   try {
+    const album = req.body; // user will send this data
+    const { title} = req.body;
+    const images = req.files ? req.files.map(file => `/uploads/${file.filename}`) : [];
+
+    if(!image === 0 || !title ) {
+      return res.status(404).json({success: false, message: 'Please provide all fields'});
+    }
+
+    const newAlbum = new Album({title, images});
+
     await newAlbum.save();
     res.status(201).json({success: true, data: newAlbum});
+  
   } catch (error) {
     console.log('Error in Create Album:', error.message)
     res.status(500).json({success: false, message: 'Server Error'});

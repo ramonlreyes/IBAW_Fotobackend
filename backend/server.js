@@ -1,7 +1,9 @@
 import express from "express";
 import dotenv from "dotenv";
 import { connectDB } from "./config/db.js";
-import productRoutes from "./routes/product.route.js"
+import { albumRoutes } from "./routes/album.route.js";
+import { photoRoutes } from "./routes/photo.router.js";
+
 
 dotenv.config();
 
@@ -10,7 +12,9 @@ const PORT = process.env.PORT || 5000;
 
 app.use(express.json()); // allows us to acept JSON data in the req.body
 
-app.use('/api/products', productRoutes );
+app.use('/api/albums', albumRoutes );
+app.use('/api/albumId/photos', photoRoutes);
+app.use("/uploads", express.static("uploads"));
 
 
 app.listen(PORT, () => {

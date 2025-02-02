@@ -5,7 +5,7 @@ import Photo from "../models/photo.model.js";
 export const getPhoto = async (req, res) => {
   const albumId = req.params.albumId;
   try {
-    const photos = await Photo.find({albumId},{});
+    const photos = await Photo.find({ albumId });
     res.status(200).json({success: true, data: photos});
   } catch (error) {
     console.log('error in fetching photos:', error.message);
@@ -14,13 +14,14 @@ export const getPhoto = async (req, res) => {
 };
 
 export const createPhoto = async (req, res) => {
-  const photo = req.body; // user will send this data
+  const { albumId } = req.params;
+  const image = req.file ? `/uploads/${req.file.filename}` : null;
 
-  if(!photo.image) {
+  if(!image) {
     return res.status(404).json({success: false, message: 'Please provide all fields'});
   }
 
-  const newPhoto = new Photo(photo);
+  const newPhoto = new Photo({ albumId, image });
   try {
     await newPhoto.save();
     res.status(201).json({success: true, data: newPhoto});
@@ -32,7 +33,7 @@ export const createPhoto = async (req, res) => {
 
 export const updatePhoto = async (req, res) => {
   const { id } = req.params;
-  const photo = req.body;
+  const image = req.file ? `/uploads/${req.file.filename}` : req.body.image;
 
 
   if(!id || !mongoose.Types.ObjectId.isValid(id)){
@@ -40,7 +41,7 @@ export const updatePhoto = async (req, res) => {
   }
 
   try {
-    const updatedPhoto = await Photo.findByIdAndUpdate(id, photo, {new:true});
+    const updatedPhoto = await Photo.findByIdAndUpdate(id, { image }, {new:true});
     res.status(200).json({success: true, data: updatedPhoto});
   } catch (error) {
     res.status(500).json({success: false, message: 'Server Error'});
@@ -51,7 +52,7 @@ export const deletePhoto = async (req, res) => {
   const {id} = req.params;
 
   if(!id || !mongoose.Types.ObjectId.isValid(id)){
-    return res.status(404).json({success: false, message: 'Invalid Product Id'});
+    return res.status(404).json({success: false, message: 'Invalid Photo ID'});
   }
   
   try {
