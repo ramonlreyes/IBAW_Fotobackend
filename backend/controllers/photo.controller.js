@@ -1,9 +1,10 @@
 import mongoose from "mongoose";
+import Album from "../models/album.model.js";
 import Photo from "../models/photo.model.js";
 
 
 export const getPhoto = async (req, res) => {
-  const albumId = req.params.albumId;
+  const { albumId } = req.params;
   try {
     const photos = await Photo.find({ albumId });
     res.status(200).json({success: true, data: photos});
@@ -13,53 +14,73 @@ export const getPhoto = async (req, res) => {
   }
 };
 
-export const createPhoto = async (req, res) => {
+export const uploadPhoto = async (req, res) => {
   const { albumId } = req.params;
-  const image = req.file ? `/uploads/${req.file.filename}` : null;
 
-  if(!image) {
-    return res.status(404).json({success: false, message: 'Please provide all fields'});
+  const album = await Album.findById(albumId);
+  if(!album){
+    return res.status(404).json({success: false, message: 'Album not found'});
   }
 
-  const newPhoto = new Photo({ albumId, image });
+  if(!req.file) {
+    return res.status(400).json({success: false, message: 'No file uploaded'});
+  }
+
+  const imageData = {
+    data: req.file.buffer,
+    contentType: req.file.mimetype
+  }
+
   try {
+    const newPhoto = new Photo({
+      albumId,
+      image: imageData
+    });
+
     await newPhoto.save();
+    album.images.push(imageData);
+    await album.save();
+
     res.status(201).json({success: true, data: newPhoto});
   } catch (error) {
-    console.log('Error in Create Photo:', error.message)
+    console.log('Error in creating Photo', error.message);
     res.status(500).json({success: false, message: 'Server Error'});
   }
 };
 
-export const updatePhoto = async (req, res) => {
-  const { id } = req.params;
-  const image = req.file ? `/uploads/${req.file.filename}` : req.body.image;
-
-
-  if(!id || !mongoose.Types.ObjectId.isValid(id)){
-    return res.status(404).json({success: false, message: 'Invalid Album Id'});
-  }
-
-  try {
-    const updatedPhoto = await Photo.findByIdAndUpdate(id, { image }, {new:true});
-    res.status(200).json({success: true, data: updatedPhoto});
-  } catch (error) {
-    res.status(500).json({success: false, message: 'Server Error'});
-  }
-};
 
 export const deletePhoto = async (req, res) => {
-  const {id} = req.params;
+  const { albumId, photoId } = req.params;
 
-  if(!id || !mongoose.Types.ObjectId.isValid(id)){
-    return res.status(404).json({success: false, message: 'Invalid Photo ID'});
+  const album = await Album.findById(albumId);
+  if(!album) {
+    return res.status(404).json({success: false, message: 'Album not found'});
   }
+
+  const photo = await Photo.findById(id);
+  if(!photo) {
+    return res.status(404).json({success: false, message: 'Photo not found'});
+  }
+
+  album.images = album.images.filter(image => image._id.toString() !== photoId);
   
   try {
+    await album.save();
     await Photo.findByIdAndDelete(id);
     res.status(200).json({success: true, message: 'Photo deleted'});
   } catch (error) {
     console.log('error in deleting Photo:', error.message);
     res.status(500).json({success: false, message: 'Server Error'});
   }
+};
+
+export const getPhotoImage = async (req, res) => {
+  const { id } = req.params;
+
+  const photo = await Photo.findById(id);
+  if(!photo) {
+    return res.status(404).json({success: false, message: 'Photo not found'});
+  }
+  res.set('Content-Type', photo.image.contentType);
+  res.send(photo.image.data);
 };

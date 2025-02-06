@@ -27,13 +27,16 @@ export const getAlbum = async (req, res) => {
 
 export const createAlbum = async (req, res) => {
   try {
-    const album = req.body; // user will send this data
     const { title} = req.body;
-    const images = req.files ? req.files.map(file => `/uploads/${file.filename}`) : [];
 
-    if(!image === 0 || !title ) {
+    if(!req.files ||!req.length === 0 || !title ) {
       return res.status(404).json({success: false, message: 'Please provide all fields'});
     }
+
+    const images = req.files.map((file) => ({
+      data: file.buffer,
+      contentType: file.mimetype,
+    }));
 
     const newAlbum = new Album({title, images});
 
@@ -76,5 +79,21 @@ export const deleteAlbum = async (req, res) => {
   } catch (error) {
     console.log('error in deleting Album:', error.message);
     res.status(500).json({success: false, message: 'Server Error'});
+  }
+};
+
+export const getAlbumImage = async (req, res) => {
+  try {
+    const { id, index} = req.params;
+    const album = await Album.findById(id);
+
+    if(!album || !album.images[Number(index)]) {
+      return res.status(404).json({success: false, message: "image not found"});
+    }
+    res.set('Content-type', album.images[Number(index)].contentType);
+    res.send(album.images[Number(index)].data);
+  } catch (error) {
+    console.log("Error in fetching image:", error.message);
+    res.status(500).json({success: false, message: "Server Error"});
   }
 };

@@ -1,13 +1,15 @@
 import mongoose from "mongoose";
 
 const albumSchema = new mongoose.Schema({
-  images: [{
-    type: String,
-    require: true
-  }],
+  images: [
+    {
+    data: {type: Buffer, required: true},
+    contentType: {type: String, required: true}
+    },
+  ],
   title: {
     type: String,
-    require: true
+    require: true,
   },
   album_id:  {
     type: mongoose.Types.ObjectId,

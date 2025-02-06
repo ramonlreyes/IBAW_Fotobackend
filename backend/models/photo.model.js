@@ -3,8 +3,8 @@ import mongoose from "mongoose";
 const photoSchema = new mongoose.Schema({
   albumId: { type: mongoose.Schema.Types.ObjectId, ref: 'Album' },
   image: {
-    type: String,
-    require: true
+    data: { type: Buffer, require: true },
+    contentType: { type: String, require: true }
   },
   title: {
     type: String,

@@ -13,7 +13,7 @@ const PORT = process.env.PORT || 5000;
 app.use(express.json()); // allows us to acept JSON data in the req.body
 
 app.use('/api/albums', albumRoutes );
-app.use('/api/albumId/photos', photoRoutes);
+app.use('/api/albums', photoRoutes);
 app.use("/uploads", express.static("uploads"));
 
 
