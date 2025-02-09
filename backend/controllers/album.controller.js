@@ -1,5 +1,7 @@
 import mongoose from "mongoose";
 import Album from "../models/album.model.js";
+import path from "path";
+import fs from "fs";
 
 
 export const getAllAlbums = async (req, res) => {
@@ -7,93 +9,118 @@ export const getAllAlbums = async (req, res) => {
     const albums = await Album.find({});
     res.status(200).json({success: true, data: albums});
   } catch (error) {
-    console.log('error in fetching albums:', error.message);
+    console.log('Error in fetching albums;', error.message);
     res.status(500).json({success: false, message: 'Server Error'});
   }
 };
 
 export const getAlbum = async (req, res) => {
   const { id } = req.params;
-  const album = req.body;
 
   try {
-    const album = await Album.find(id, {});
-    res.status(200).json({success: true, data: albums});
+    const album = await Album.findById(id);
+    if (!album) {
+      return res.status(404).json({success: false, message: 'Album not found'});
+    }
+    res.status(200).json({success: true, data: album});
   } catch (error) {
-    console.log('error in fetching album:', error.message);
+    console.log('Error ind fetching album:', error.message);
     res.status(500).json({success: false, message: 'Server Error'});
   }
 };
 
 export const createAlbum = async (req, res) => {
   try {
-    const { title} = req.body;
+    const { title } = req.body;
+    const albumId = new mongoose.Types.ObjectId();
 
-    if(!req.files ||!req.length === 0 || !title ) {
-      return res.status(404).json({success: false, message: 'Please provide all fields'});
+
+    if(!title || !req.files || !req.files['cover'] || !req.files['images']) {
+      return res.status(400).json({success: false, message: 'Please provide all Fields'});
     }
 
-    const images = req.files.map((file) => ({
-      data: file.buffer,
-      contentType: file.mimetype,
-    }));
 
-    const newAlbum = new Album({title, images});
+    const coverUrl = `/uploads/${title.replace(/\s+/g, '_')}-${albumId}/${req.files['cover'][0].filename}`;
+    const imagesUrls = req.files['images'].map((file) => `/uploads/${title.replace(/\s+/g, '_')}-${albumId}/${file.filename}`);
+
+    const newAlbum = new Album({
+      title,
+      cover: coverUrl,
+      images: imagesUrls
+    });
 
     await newAlbum.save();
-    res.status(201).json({success: true, data: newAlbum});
-  
+
+    res.status(201).json({success: true, albumId: newAlbum._id, data: newAlbum});
   } catch (error) {
-    console.log('Error in Create Album:', error.message)
+    console.log('Error in Creating a Album:', error.message);
     res.status(500).json({success: false, message: 'Server Error'});
   }
 };
 
 export const updateAlbum = async (req, res) => {
   const { id } = req.params;
-  const album = req.body;
-
-
-  if(!id || !mongoose.Types.ObjectId.isValid(id)){
-    return res.status(404).json({success: false, message: 'Invalid Album Id'});
+  const { images } = req.body;
+  if(!id || !mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({success: false, message:'Invalid Album ID'});
   }
 
   try {
-    const updatedAlbum = await Album.findByIdAndUpdate(id, album, {new:true});
+    const updatedAlbum = await Album.findByIdAndUpdate(id, {$push: {images}}, {new: true, runValidators: true});
+
+    if(!updatedAlbum) {
+      return res.status(404).json({success: false, message: 'Album not found'});
+    }
     res.status(200).json({success: true, data: updatedAlbum});
   } catch (error) {
+    console.error(error.message);
     res.status(500).json({success: false, message: 'Server Error'});
   }
 };
 
 export const deleteAlbum = async (req, res) => {
-  const {id} = req.params;
+  const { id } = req.params;
 
-  if(!id || !mongoose.Types.ObjectId.isValid(id)){
-    return res.status(404).json({success: false, message: 'Invalid Product Id'});
+  if(!id || !mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({success: false, message: 'Invalid Album ID'});
   }
-  
-  try {
-    await Album.findByIdAndDelete(id);
+
+  try{
+    const deletedAlbum = await Album.findByIdAndDelete(id);
+    if(!deletedAlbum) {
+      return res.status(404).json({success: false, message: 'Album not found'});
+    }
+
+    const albumFolderName = `${deleteAlbum.title.replace(/\s+/g, '_')}-${deleteAlbum._id}`;
+    const albumFolderPath = path.join(__dirname, 'uploads', albumFolderName);
+
+    if(fs.existsSync(albumFolderPath)) {
+      fs.rmSync(albumFolderPath, {recursive: true, force: true});
+    }
+
     res.status(200).json({success: true, message: 'Album deleted'});
   } catch (error) {
-    console.log('error in deleting Album:', error.message);
+    console.log('Error in deleting Album:', error.message);
     res.status(500).json({success: false, message: 'Server Error'});
   }
 };
 
 export const getAlbumImage = async (req, res) => {
   try {
-    const { id, index} = req.params;
+    const { id, index } = req.params;
     const album = await Album.findById(id);
 
     if(!album || !album.images[Number(index)]) {
-      return res.status(404).json({success: false, message: "image not found"});
+      return res.status(404).json({success: false, message: 'Image not fund'});
     }
-    res.set('Content-type', album.images[Number(index)].contentType);
-    res.send(album.images[Number(index)].data);
+
+    const image = album.images[Number(index)];
+    const imagePath = (path.join(__dirname, 'uploads', image));
+
+    res.sendFile(imagePath);
+
   } catch (error) {
-    console.log("Error in fetching image:", error.message);
-    res.status(500).json({success: false, message: "Server Error"});
+    console.log('Error in fetchin Image:', error.message);
+    res.status(500).json({success: false, messsage: 'Server Error'});
   }
 };
