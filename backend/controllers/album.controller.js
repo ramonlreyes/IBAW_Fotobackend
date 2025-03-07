@@ -32,18 +32,19 @@ export const getAlbum = async (req, res) => {
 export const createAlbum = async (req, res) => {
   try {
     const { title } = req.body;
-    const albumId = new mongoose.Types.ObjectId();
+    const albumId =  req.albumId || new mongoose.Types.ObjectId();
 
 
     if(!title || !req.files || !req.files['cover'] || !req.files['images']) {
       return res.status(400).json({success: false, message: 'Please provide all Fields'});
     }
 
-
-    const coverUrl = `/uploads/${title.replace(/\s+/g, '_')}-${albumId}/${req.files['cover'][0].filename}`;
-    const imagesUrls = req.files['images'].map((file) => `/uploads/${title.replace(/\s+/g, '_')}-${albumId}/${file.filename}`);
+    const albumFolderName = `${title.replace(/\s+/g, '_')}-${albumId}`;
+    const coverUrl = `/uploads/${albumFolderName}/${req.files['cover'][0].filename}`;
+    const imagesUrls = req.files['images'].map((file) => `/uploads/${albumFolderName}/${file.filename}`);
 
     const newAlbum = new Album({
+      _id: albumId,
       title,
       cover: coverUrl,
       images: imagesUrls
@@ -60,18 +61,42 @@ export const createAlbum = async (req, res) => {
 
 export const updateAlbum = async (req, res) => {
   const { id } = req.params;
-  const { images } = req.body;
+
   if(!id || !mongoose.Types.ObjectId.isValid(id)) {
     return res.status(400).json({success: false, message:'Invalid Album ID'});
   }
 
   try {
-    const updatedAlbum = await Album.findByIdAndUpdate(id, {$push: {images}}, {new: true, runValidators: true});
-
-    if(!updatedAlbum) {
+    const album = await Album.findById(id);
+    if(!album) {
       return res.status(404).json({success: false, message: 'Album not found'});
     }
-    res.status(200).json({success: true, data: updatedAlbum});
+    req.albumFolderName = `${album.title.replace(/\s+/g, '_')}-${album._id}`;
+    req.albumId = album._id;
+
+    if (req.body.title && req.body.title !== album.title) {
+      album.title = req.body.title;
+    }
+
+    if(req.files && req.files['cover']) {
+      if(album.cover){
+        const oldCoverPath = path.join(__dirname,'..', '..', 'uploads', album.cover.split('/')[2], album.cover.split('/')[3]
+      );
+        await fs.promises.rm(oldCoverPath, {force: true});
+      }
+      const newCoverFilename = req.files['cover'][0].filename;
+      const newCoverUrl = `/uploads/${req.albumFolderName}/${newCoverFilename}`;
+      album.cover = newCoverUrl;
+    }
+
+    if(req.files && req.files['images']) {
+      const imagesUrls = req.files['images'].map((file) => `/uploads/${req.albumFolderName}/${file.filename}`);
+      album.images.push(...imagesUrls);
+    }
+
+    await album.save();
+    
+    res.status(200).json({success: true, data: album});
   } catch (error) {
     console.error(error.message);
     res.status(500).json({success: false, message: 'Server Error'});

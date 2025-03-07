@@ -1,13 +1,13 @@
 import mongoose from "mongoose";
 
-const photoSchema = new mongoose.Schema({
+const fotosSchema = new mongoose.Schema({
   albumId: { type: mongoose.Schema.Types.ObjectId,
   ref: 'Album',
   require: true },
-  imageUrl: {
+  images: [{
     type: String,
     require: true
-  },
+  }],
   title: {
     type: String,
     require: false
@@ -20,6 +20,6 @@ const photoSchema = new mongoose.Schema({
   timestamps: true // createdAt, updatedAt
 });
 
-const Photo = mongoose.model('Photo', photoSchema)
+const Fotos = mongoose.model('Fotos', fotosSchema)
 
-export default Photo;
+export default Fotos;

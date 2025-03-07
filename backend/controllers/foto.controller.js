@@ -2,8 +2,18 @@ import mongoose from "mongoose";
 import path from "path";
 import fs from "fs";
 import Album from "../models/album.model.js";
-import Photo from "../models/photo.model.js";
+import Fotos from "../models/foto.model.js";
 
+
+export const getAllPhotos = async (req, res) => {
+  try {
+    const photos = await Photo.find({});
+    res.status(200).json({success: true, data: photos});
+  } catch (error) {
+    console.log('Error in fetching photos;', error.message);
+    res.status(500).json({success: false, message: 'Server Error'});
+  }
+};
 
 export const getPhoto = async (req, res) => {
   const { albumId, photoId } = req.params;
@@ -26,6 +36,7 @@ export const getPhoto = async (req, res) => {
 
 export const uploadPhoto = async (req, res) => {
   const { albumId } = req.params;
+  const { __dirname } = req.params;
 
   try {
     const album = await Album.findById(albumId);
@@ -33,29 +44,31 @@ export const uploadPhoto = async (req, res) => {
       return res.status(404).json({success: false, message: 'Album not found'});
     }
 
-    if(!req.file || !req.files['photo']) {
+    if(!req.files['images']) {
       return res.status(400).json({success: false, message: 'No file uploaded'});
     }
 
-    const albumFolderName = `${album.title.replace(/\s+/g, '_')}-${albumId}`;
-    const albumFolderPath = path.join(__dirname, 'uploads', albumFolderName);
+    const uploadFolder = path.join(__dirname, "..", "..", "uploads", `${album.title.replace(/\s+/g, "_")}-${albumId}`);
 
-    if(!fs.existsSync(albumFolderPath)) {
-      fs.mkdirSync(albumFolderPath, {recursive: true});
+    if (!fs.existsSync(uploadFolder)) {
+      fs.mkdirSync(uploadFolder, { recursive: true });
     }
 
-    const photoFile = req.files['photo'][0];
-    const photoUrl = `/uploads/${albumFolderName}/${photoFile.filename}`;
+   
+    const imagesUrls = req.files["images"].map((file) => `/uploads/${album.title.replace(/\s+/g, "_")}-${albumId}/${file.filename}`);
+
+  
 
     const newPhoto = new Photo({
       albumId,
-      imageUrl: photoUrl,
+      images: imagesUrls,
     });
 
     await newPhoto.save();
 
-    album.images.push(photoUrl);
+    album.images.push(...newPhoto.images);
     await album.save();
+
 
     res.status(201).json({success: true, data: newPhoto});
   } catch (error) {
@@ -101,18 +114,19 @@ export const deletePhoto = async (req, res) => {
 
 export const getPhotoImage = async (req, res) => {
   const { id } = req.params;
+  const albumId = req.params.albumId;
   try {
     const photo = await Photo.findById(id);
     if(!photo) {
       return res.status(404).json({success: false, message: 'Photo not found'});
   }
 
-  const album = await Photo.findById(photo.albumId);
+  const album = await Photo.findById(albumId);
   if (!album) {
     return res.status(404).json({success: false, message: 'Album not found'});
   }
 
-  const albumFolderName = `${album.title.replace(/\s+/g, '_')}-${photo.album_id}`;
+
   const imagePath = path.join(__dirname, 'uploads', albumFolderName, path.basename(photo.imageUrl));
 
   

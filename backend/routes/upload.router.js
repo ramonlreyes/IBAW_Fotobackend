@@ -3,6 +3,8 @@ import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
+import mongoose from "mongoose";
+import Album from "../models/album.model.js";
 
 
 
@@ -11,27 +13,41 @@ const __dirname = dirname(__filename);
 
 
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
+  destination: async (req, file, cb) => {
     try {
-    
-      const albumTitle = req.body.title || 'default';
-      const albumFolderName = `${albumTitle.replace(/\s+/g, '_')}`;
-      const uploadPath = path.join(__dirname, '..','..', 'uploads', albumFolderName);
+      if (!req.albumFolderName) {
+        if (req.params.id && mongoose.Types.ObjectId.isValid(req.params.id)) {
+          req.albumId = req.params.id;
 
+          const existingAlbum = await Album.findById(req.albumId);
+          if (existingAlbum) {
+            req.albumFolderName = `${existingAlbum.title.replace(/\s+/g, '_')}-${existingAlbum._id}`;
+          } else {
+            return cb(new Error("Album not found"), false);
+          }
+        } else if (!req.albumId) {
+          req.albumId = new mongoose.Types.ObjectId();
+          const albumTitle = req.body.title || "default";
+          req.albumFolderName = `${albumTitle.replace(/\s+/g, '_')}-${req.albumId}`;
+        }
+      }
 
-    if(!fs.existsSync(uploadPath)){
-      fs.mkdirSync(uploadPath, {recursive: true});
-    }
+      const uploadPath = path.join(__dirname, "..", "..", "uploads", req.albumFolderName);
 
-    cb(null, uploadPath);
-  } catch (error) {
-    console.error('Error in destination function:', error);
-    cb(error, false);
+      fs.mkdir(uploadPath, { recursive: true }, (error) => {
+        if (error) {
+          console.log("Error in mkdir:", error);
+          return cb(error);
+        }
+        cb(null, uploadPath);
+      });
+    } catch (error) {
+      console.error("Error in destination function:", error);
+      cb(error, false);
     }
   },
   filename: (req, file, cb) => {
-    const originalname = path.basename(file.originalname);
-    cb(null, originalname);
+    cb(null, file.originalname); // Save file with its original name
   },
 });
 
