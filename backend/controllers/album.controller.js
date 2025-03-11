@@ -2,7 +2,12 @@ import mongoose from "mongoose";
 import Album from "../models/album.model.js";
 import path from "path";
 import fs from "fs";
+import { fileURLToPath } from "url";
+import { dirname } from "path";
 
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 export const getAllAlbums = async (req, res) => {
   try {
@@ -71,10 +76,21 @@ export const updateAlbum = async (req, res) => {
     if(!album) {
       return res.status(404).json({success: false, message: 'Album not found'});
     }
-    req.albumFolderName = `${album.title.replace(/\s+/g, '_')}-${album._id}`;
-    req.albumId = album._id;
+    
+    const oldAlbumFolderName = `${album.title.replace(/\s+/g, '_')}-${album._id}`;
+    const oldAlbumFolderPath = path.join(__dirname, '..', '..', 'uploads', oldAlbumFolderName);
 
-    if (req.body.title && req.body.title !== album.title) {
+    let newAlbumFolderName = oldAlbumFolderName;
+    let newAlbumFolderPath = oldAlbumFolderPath;
+
+    if(req.body.title && req.body.title !== album.title) {
+      newAlbumFolderName = `${req.body.title.replace(/\s+/g, '_')}-${album._id}`;
+      newAlbumFolderPath = path.join(__dirname,'..','..', 'uploads', newAlbumFolderName);
+
+      if(fs.existsSync(oldAlbumFolderPath)) {
+        fs.renameSync(oldAlbumFolderPath, newAlbumFolderPath);
+      }
+
       album.title = req.body.title;
     }
 
@@ -111,16 +127,29 @@ export const deleteAlbum = async (req, res) => {
   }
 
   try{
-    const deletedAlbum = await Album.findByIdAndDelete(id);
-    if(!deletedAlbum) {
+    const album = await Album.findById(id);
+    if(!album) {
       return res.status(404).json({success: false, message: 'Album not found'});
     }
 
-    const albumFolderName = `${deleteAlbum.title.replace(/\s+/g, '_')}-${deleteAlbum._id}`;
-    const albumFolderPath = path.join(__dirname, 'uploads', albumFolderName);
+    const albumFolderName = `${album.title.replace(/\s+/g, '_')}-${album._id}`;
+    const albumFolderPath = path.join(__dirname,'..', '..','uploads', albumFolderName);
 
     if(fs.existsSync(albumFolderPath)) {
-      fs.rmSync(albumFolderPath, {recursive: true, force: true});
+      try {
+        const deletedAlbum = await Album.findByIdAndDelete(id);
+        if(!deletedAlbum) {
+          return res.status(404).json({ success: false, message: 'Album not found in database'});
+        };
+        console.log('Succesfully deleted album from Mongo DB');
+        fs.rmSync(albumFolderPath, { recursive: true, force: true});
+        return res.status(200).json({success: true, message: `Successfully deleted Folder: ${albumFolderPath}`});
+
+      } catch (folderError) {
+        return res.status(500).json({success: false, message: 'Failed to delete Album'});
+      }
+    } else {
+      console.log(`Album folder not found ${albumFolderPath}`);
     }
 
     res.status(200).json({success: true, message: 'Album deleted'});

@@ -21,7 +21,21 @@ const storage = multer.diskStorage({
 
           const existingAlbum = await Album.findById(req.albumId);
           if (existingAlbum) {
-            req.albumFolderName = `${existingAlbum.title.replace(/\s+/g, '_')}-${existingAlbum._id}`;
+
+            const oldFolderName = `${existingAlbum.title.replace(/\s+/g,'_')}-${existingAlbum._id}`;
+            const oldFolderPath = path.join(__dirname, '..','..', 'uploads', oldFolderName);
+           
+            if(req.body.title && req.body.title !== existingAlbum.title) {
+              const newFolderName = `${req.body.title.replace(/\s+/g, '_')}-${existingAlbum._id}`;
+              const newFolderPath = path.join(__dirname, '..', '..', 'uploads', newFolderName);
+              
+              if(fs.existsSync(oldFolderPath)) {
+                fs.renameSync(oldFolderPath, newFolderPath);
+              }
+              req.albumFolderName = newFolderName;
+            } else {
+              req.albumFolderName = oldFolderName;
+            }
           } else {
             return cb(new Error("Album not found"), false);
           }
