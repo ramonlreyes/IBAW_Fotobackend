@@ -77,7 +77,6 @@ export const uploadPhoto = async (req, res) => {
   }
 };
 
-
 export const deletePhoto = async (req, res) => {
   const { albumId, photoId } = req.params;
 

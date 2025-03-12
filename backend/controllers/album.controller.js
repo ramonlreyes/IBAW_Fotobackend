@@ -141,7 +141,7 @@ export const deleteAlbum = async (req, res) => {
         if(!deletedAlbum) {
           return res.status(404).json({ success: false, message: 'Album not found in database'});
         };
-        console.log('Succesfully deleted album from Mongo DB');
+        
         fs.rmSync(albumFolderPath, { recursive: true, force: true});
         return res.status(200).json({success: true, message: `Successfully deleted Folder: ${albumFolderPath}`});
 

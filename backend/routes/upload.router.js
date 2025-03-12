@@ -14,6 +14,10 @@ const __dirname = dirname(__filename);
 
 const storage = multer.diskStorage({
   destination: async (req, file, cb) => {
+    if(req.method === 'DELETE'){
+      return cb(null, '');
+    }
+    
     try {
       if (!req.albumFolderName) {
         if (req.params.id && mongoose.Types.ObjectId.isValid(req.params.id)) {
