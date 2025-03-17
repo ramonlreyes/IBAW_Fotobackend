@@ -97,7 +97,7 @@ export const loginUser = async (req, res) => {
 
 };
 
-export const logoutUSer = async(req, res) => {
+export const logoutUser = async(req, res) => {
   res.cookie('accesToken', '', {
     httpOnly: true,
     expires: new Date(0)

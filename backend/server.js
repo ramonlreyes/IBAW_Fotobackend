@@ -5,6 +5,7 @@ import { connectDB } from "./config/db.js";
 import { albumRoutes } from "./routes/album.route.js";
 import { authRoutes } from "./routes/auth.routes.js";
 import rateLimit from "express-rate-limit";
+import cookieParser from "cookie-parser";
 
 
 dotenv.config();
@@ -21,6 +22,7 @@ const limiter = rateLimit({
 
 app.use(express.json()); // allows us to acept JSON data in the req.body
 app.use(limiter);
+app.use(cookieParser());
 
 app.use('/api/albums', albumRoutes );
 app.use('/api/auth', authRoutes);
