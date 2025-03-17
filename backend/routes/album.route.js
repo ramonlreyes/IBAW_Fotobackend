@@ -14,15 +14,6 @@ router.get('/:id/images/:index', getAlbumImage);
 router.put('/:id', protect, isAdmin, uploadMiddleware, updateAlbum);
 router.delete('/:id', protect, isAdmin, deleteAlbum);
 
-/*
-//Photos
-
-router.get('/:id', getPhoto);
-router.get('/:albumId', getAllPhotos);
-router.post('/:albumId', uploadMiddleware, uploadPhoto);
-router.delete('/:albumId/:id', deletePhoto);
-
-*/
 
 export { router as albumRoutes};
 

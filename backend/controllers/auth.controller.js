@@ -24,12 +24,24 @@ export const registerUser = async (req, res) => {
     const newUser = await User.create({name, email, password, role});
 
     if(newUser) {
-      res.status(201).json({
-        _id: newUser._id,
-        name: newUser.name,
-        email: newUser.email,
-        role: newUser.role || 'user',
-        token: generateToken(newUser._id),
+
+      const token = generateToken(user);
+
+      res.cookie('accessToken', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 7 * 24 * 60 * 60 * 1000
+    });
+
+      res.status(201).json({ 
+        success: true,
+        user: {
+          _id: newUser._id,
+          name: newUser.name,
+          email: newUser.email,
+          role: newUser.role || 'user'
+        }
       });
     } else {
       res.status(400).json({success: false, message:'Invalid user Data'});
@@ -42,6 +54,10 @@ export const registerUser = async (req, res) => {
 
 export const loginUser = async (req, res) => {
   const { email, password} = req.body;
+
+  if(!email || !password) {
+    return res.status(400).json({success: false, message:'All field are required'})
+  }
 
   try {
     const user = await User.findOne({ email });
@@ -56,7 +72,14 @@ export const loginUser = async (req, res) => {
       return res.status(401).json({success: false, message: 'Invalid Email or Password'});
     }
 
-    const token = jwt.sign({id: user._id, role: user.role}, process.env.JWT_SECRET,);
+    const token = generateToken(user);
+
+    res.cookie('accessToken', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000
+    })
 
     res.status(200).json({
       success: true,
@@ -65,7 +88,7 @@ export const loginUser = async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
-        role: user.role,
+        role: user.role
       },
     });
   } catch (error) {
@@ -73,3 +96,13 @@ export const loginUser = async (req, res) => {
   }
 
 };
+
+export const logoutUSer = async(req, res) => {
+  res.cookie('accesToken', '', {
+    httpOnly: true,
+    expires: new Date(0)
+  });
+
+  res.status(200).json({success: true, message: 'Logged out successfully'});
+};
+
