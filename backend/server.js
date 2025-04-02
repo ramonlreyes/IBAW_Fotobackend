@@ -6,6 +6,7 @@ import { albumRoutes } from "./routes/album.route.js";
 import { authRoutes } from "./routes/auth.routes.js";
 import rateLimit from "express-rate-limit";
 import cookieParser from "cookie-parser";
+import cors from "cors";
 
 
 dotenv.config();
@@ -19,6 +20,11 @@ const limiter = rateLimit({
   max: 100,
   message: 'Too many Request, please try again later.'
 });
+
+app.use(cors({
+  origin: process.env.NODE_ENV === 'production' ? 'https://your-production-domain.com' : 'http://localhost:80',
+  credentials: true
+}));
 
 app.use(express.json()); // allows us to acept JSON data in the req.body
 app.use(limiter);

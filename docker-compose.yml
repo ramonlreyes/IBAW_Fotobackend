@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+    container_name: node-album-app
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    env_file:
+      - ./.env
+    volumes:
+      - ./uploads:/app/uploads
+      - backend_node_modules:/app/node_modules
+    networks:
+      - app-network
+
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: react-album-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  backend_node_modules:
+  

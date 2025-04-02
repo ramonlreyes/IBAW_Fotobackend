@@ -2,19 +2,14 @@ import mongoose from "mongoose";
 import Album from "../models/album.model.js";
 import path from "path";
 import fs from "fs";
-import { fileURLToPath } from "url";
-import { dirname } from "path";
-
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+import { getFotoPath, getAlbumDir, getUrlPath, getUploadsDir, normalizeTitle } from "../utils/path.helper.js";
+import { handleApiError } from "../utils/error.handling.js";
 
 export const getAllAlbums = async (req, res) => {
   try {
     const albums = await Album.find({});
     res.status(200).json({success: true, data: albums});
   } catch (error) {
-    console.log('Error in fetching albums;', error.message);
     res.status(500).json({success: false, message: 'Server Error'});
   }
 };
@@ -23,13 +18,17 @@ export const getAlbum = async (req, res) => {
   const { id } = req.params;
 
   try {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({success: false, message: 'Invalid Album ID'});
+    }
+
     const album = await Album.findById(id);
     if (!album) {
       return res.status(404).json({success: false, message: 'Album not found'});
     }
+    
     res.status(200).json({success: true, data: album});
   } catch (error) {
-    console.log('Error ind fetching album:', error.message);
     res.status(500).json({success: false, message: 'Server Error'});
   }
 };
@@ -37,16 +36,23 @@ export const getAlbum = async (req, res) => {
 export const createAlbum = async (req, res) => {
   try {
     const { title } = req.body;
-    const albumId =  req.albumId || new mongoose.Types.ObjectId();
+    const albumId = req.albumId || new mongoose.Types.ObjectId();
 
-
-    if(!title || !req.files || !req.files['cover'] || !req.files['images']) {
-      return res.status(400).json({success: false, message: 'Please provide all Fields'});
+    if(!title) {
+      return res.status(400).json({success: false, message: 'Album title is required'});
     }
 
-    const albumFolderName = `${title.replace(/\s+/g, '_')}-${albumId}`;
-    const coverUrl = `/uploads/${albumFolderName}/${req.files['cover'][0].filename}`;
-    const imagesUrls = req.files['images'].map((file) => `/uploads/${albumFolderName}/${file.filename}`);
+    if(!req.files || !req.files['cover']) {
+      return res.status(400).json({success: false, message: 'Cover image is required'});
+    }
+
+    if(!req.files['images'] || req.files['images'].length === 0) {
+      return res.status(400).json({success: false, message: 'At least one album image is required'});
+    }
+
+    // Using path helpers for consistent URL generation
+    const coverUrl = getUrlPath(title, albumId, req.files['cover'][0].filename);
+    const imagesUrls = req.files['images'].map((file) => getUrlPath(title, albumId, file.filename));
 
     const newAlbum = new Album({
       _id: albumId,
@@ -59,62 +65,109 @@ export const createAlbum = async (req, res) => {
 
     res.status(201).json({success: true, albumId: newAlbum._id, data: newAlbum});
   } catch (error) {
-    console.log('Error in Creating a Album:', error.message);
     res.status(500).json({success: false, message: 'Server Error'});
   }
 };
 
 export const updateAlbum = async (req, res) => {
   const { id } = req.params;
-
+  
   if(!id || !mongoose.Types.ObjectId.isValid(id)) {
-    return res.status(400).json({success: false, message:'Invalid Album ID'});
+    return res.status(400).json({success: false, message: 'Invalid Album ID'});
   }
-
+  
   try {
     const album = await Album.findById(id);
     if(!album) {
       return res.status(404).json({success: false, message: 'Album not found'});
     }
+   
+    // Store the old title before changing it
+    const oldTitle = album.title;
+    const titleChanged = req.body.title && req.body.title !== oldTitle;
     
-    const oldAlbumFolderName = `${album.title.replace(/\s+/g, '_')}-${album._id}`;
-    const oldAlbumFolderPath = path.join(__dirname, '..', '..', 'uploads', oldAlbumFolderName);
-
-    let newAlbumFolderName = oldAlbumFolderName;
-    let newAlbumFolderPath = oldAlbumFolderPath;
-
-    if(req.body.title && req.body.title !== album.title) {
-      newAlbumFolderName = `${req.body.title.replace(/\s+/g, '_')}-${album._id}`;
-      newAlbumFolderPath = path.join(__dirname,'..','..', 'uploads', newAlbumFolderName);
-
-      if(fs.existsSync(oldAlbumFolderPath)) {
-        fs.renameSync(oldAlbumFolderPath, newAlbumFolderPath);
+    // Check if the folder was renamed in the middleware
+    if(titleChanged) {
+      // Old and new folder paths
+      const oldFolderName = `${normalizeTitle(oldTitle)}-${album._id}`;
+      const oldFolderPath = path.join(getUploadsDir(), oldFolderName);
+      
+      const newFolderName = `${normalizeTitle(req.body.title)}-${album._id}`;
+      const newFolderPath = path.join(getUploadsDir(), newFolderName);
+      
+      // Double-check folder rename if needed
+      if (fs.existsSync(oldFolderPath) && !fs.existsSync(newFolderPath)) {
+        try {
+          fs.renameSync(oldFolderPath, newFolderPath);
+        } catch (renameError) {
+          return res.status(500).json({success: false, message: 'Error renaming album folder'});
+        }
       }
-
+      
+      // Update the album title
       album.title = req.body.title;
-    }
-
-    if(req.files && req.files['cover']) {
-      if(album.cover){
-        const oldCoverPath = path.join(__dirname,'..', '..', 'uploads', album.cover.split('/')[2], album.cover.split('/')[3]
-      );
-        await fs.promises.rm(oldCoverPath, {force: true});
+      
+      // Update paths for all images when title changes
+      if(album.cover) {
+        const coverFilename = path.basename(album.cover);
+        const newCoverUrl = getUrlPath(req.body.title, album._id, coverFilename);
+        album.cover = newCoverUrl;
       }
+      
+      if(album.images && album.images.length > 0) {
+        const updatedImages = album.images.map(imageUrl => {
+          const imageFilename = path.basename(imageUrl);
+          const newImageUrl = getUrlPath(req.body.title, album._id, imageFilename);
+          return newImageUrl;
+        });
+        album.images = updatedImages;
+      }
+    }
+    
+    // Handle new cover upload
+    if(req.files && req.files['cover']) {
+      // Delete old cover file if it exists
+      if(album.cover) {
+        try {
+          const oldCoverFilename = path.basename(album.cover);
+          const oldCoverPath = getFotoPath(album.title, album._id, oldCoverFilename);
+          
+          if(fs.existsSync(oldCoverPath)) {
+            try {
+              fs.unlinkSync(oldCoverPath);
+            } catch (unlinkError) {
+              // We'll continue even if we can't delete the old file
+            }
+          }
+        } catch (error) {
+          // Continue even if there's an error getting the old path
+        }
+      }
+      
+      // Set new cover URL using path helper
       const newCoverFilename = req.files['cover'][0].filename;
-      const newCoverUrl = `/uploads/${req.albumFolderName}/${newCoverFilename}`;
+      const newCoverUrl = getUrlPath(album.title, album._id, newCoverFilename);
       album.cover = newCoverUrl;
     }
-
-    if(req.files && req.files['images']) {
-      const imagesUrls = req.files['images'].map((file) => `/uploads/${req.albumFolderName}/${file.filename}`);
-      album.images.push(...imagesUrls);
-    }
-
-    await album.save();
     
-    res.status(200).json({success: true, data: album});
+    // Handle new images upload
+    if(req.files && req.files['images']) {
+      const newImageUrls = req.files['images'].map(file => {
+        const imageUrl = getUrlPath(album.title, album._id, file.filename);
+        return imageUrl;
+      });
+      
+      album.images.push(...newImageUrls);
+    }
+    
+    // Save the updated album
+    try {
+      await album.save();
+      res.status(200).json({success: true, data: album});
+    } catch (saveError) {
+      res.status(500).json({success: false, message: 'Error saving album changes'});
+    }
   } catch (error) {
-    console.error(error.message);
     res.status(500).json({success: false, message: 'Server Error'});
   }
 };
@@ -126,35 +179,41 @@ export const deleteAlbum = async (req, res) => {
     return res.status(400).json({success: false, message: 'Invalid Album ID'});
   }
 
-  try{
+  try {
     const album = await Album.findById(id);
     if(!album) {
       return res.status(404).json({success: false, message: 'Album not found'});
     }
 
-    const albumFolderName = `${album.title.replace(/\s+/g, '_')}-${album._id}`;
-    const albumFolderPath = path.join(__dirname,'..', '..','uploads', albumFolderName);
+    // Use getAlbumDir helper to get the album folder path
+    const albumFolderPath = getAlbumDir(album.title, album._id);
 
     if(fs.existsSync(albumFolderPath)) {
       try {
         const deletedAlbum = await Album.findByIdAndDelete(id);
         if(!deletedAlbum) {
-          return res.status(404).json({ success: false, message: 'Album not found in database'});
-        };
+          return res.status(404).json({success: false, message: 'Album not found in database'});
+        }
         
-        fs.rmSync(albumFolderPath, { recursive: true, force: true});
-        return res.status(200).json({success: true, message: `Successfully deleted Folder: ${albumFolderPath}`});
-
-      } catch (folderError) {
-        return res.status(500).json({success: false, message: 'Failed to delete Album'});
+        try {
+          fs.rmSync(albumFolderPath, { recursive: true, force: true});
+          return res.status(200).json({success: true, message: 'Album deleted successfully'});
+        } catch (rmError) {
+          return res.status(500).json({success: false, message: 'Error deleting album folder'});
+        }
+      } catch (dbError) {
+        return res.status(500).json({success: false, message: 'Error deleting album from database'});
       }
     } else {
-      console.log(`Album folder not found ${albumFolderPath}`);
+      // If the folder doesn't exist, just delete from database
+      try {
+        await Album.findByIdAndDelete(id);
+        return res.status(200).json({success: true, message: 'Album deleted from database'});
+      } catch (dbError) {
+        return res.status(500).json({success: false, message: 'Error deleting album from database'});
+      }
     }
-
-    res.status(200).json({success: true, message: 'Album deleted'});
   } catch (error) {
-    console.log('Error in deleting Album:', error.message);
     res.status(500).json({success: false, message: 'Server Error'});
   }
 };
@@ -162,19 +221,32 @@ export const deleteAlbum = async (req, res) => {
 export const getAlbumImage = async (req, res) => {
   try {
     const { id, index } = req.params;
+    
+    if(!id || !mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({success: false, message: 'Invalid Album ID'});
+    }
+    
     const album = await Album.findById(id);
-
-    if(!album || !album.images[Number(index)]) {
-      return res.status(404).json({success: false, message: 'Image not fund'});
+    if(!album) {
+      return res.status(404).json({success: false, message: 'Album not found'});
+    }
+    
+    if(!album.images[Number(index)]) {
+      return res.status(404).json({success: false, message: 'Image not found'});
     }
 
     const image = album.images[Number(index)];
-    const imagePath = (path.join(__dirname, 'uploads', image));
+    const filename = path.basename(image);
+    
+    // Use getFotoPath helper to get the full path to the image
+    const imagePath = getFotoPath(album.title, album._id, filename);
+    
+    if(!fs.existsSync(imagePath)) {
+      return res.status(404).json({success: false, message: 'Image file not found'});
+    }
 
     res.sendFile(imagePath);
-
   } catch (error) {
-    console.log('Error in fetchin Image:', error.message);
-    res.status(500).json({success: false, messsage: 'Server Error'});
+    res.status(500).json({success: false, message: 'Server Error'});
   }
 };
