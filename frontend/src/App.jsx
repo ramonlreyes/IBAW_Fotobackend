@@ -2,8 +2,8 @@ import { useState } from 'react'
 import './App.css'
 import { AuthProvider } from './contexts/AuthContext'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import LoginPage from './pages/LoginPage/loginPage'
 import HomePage from './pages/HomePage/HomePage'
+import LoginPage from './pages/LoginPage/loginPage';
 
 function App() {
   return (
