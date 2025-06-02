@@ -18,4 +18,8 @@ COPY --from=build /app/dist /usr/share/nginx/html
 
 EXPOSE 80
 
+RUN mkdir -p /app/uploads && \
+    chown -R node:node /app/uploads && \
+    chmod -R 755 /app/uploads
+
 CMD [ "nginx", "-g", "daemon off;" ]

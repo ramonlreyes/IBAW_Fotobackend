@@ -5,9 +5,12 @@ import { dirname } from "path";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const projectRoot = path.join(__dirname, '..', '..');
+const projectRoot = process.env.UPLOAD_BASE_PATH || path.join(__dirname, '..', '..');
 
 export const getUploadsDir = () => {
+  if (process.env.NODE_ENV === 'production' || process.env.DOCKER_ENV) {
+    return '/app/uploads';
+  }
   return path.join(projectRoot, 'uploads');
 };
 
