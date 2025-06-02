@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { Eye, EyeOff, AlertCircle, LogOut, User } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
 const LoginForm = () => {
@@ -13,7 +13,7 @@ const LoginForm = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [formErrors, setFormErrors] = useState({});
 
-  const { login, error, clearError } = useAuth();
+  const { user, login, logout, isAuthenticated, error, clearError } = useAuth();
 
   useEffect(() => {
     if (error) {
@@ -57,6 +57,21 @@ const LoginForm = () => {
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
+
+  // Logout Validation
+
+  const handleLogout = async () => {
+    setIsSubmitting(true);
+
+    try{
+      await logout();
+    } catch (error) {
+      console.error('Logout failed:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
 
   // Submission Handling
   const handleSubmit = async (e) => {
@@ -109,6 +124,48 @@ const LoginForm = () => {
     console.log('Working on that. Please try to remember');
   };
 
+  if (user && isAuthenticated()) {
+    return (
+      <div className='w-full max-w-sm mx-auto px-4 lg:px-0'>
+        <div className='text-center mb-6 md:mb-8'>
+          <div className='w-14 h-14 md:w-16 md:h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4'>
+            <User className='w-7 h-7 md:w-8 md:h-8 text-white' />
+          </div>
+          <h2 className='text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 mb-2'>
+            Welcome Back
+          </h2>
+          <p className='text-sm md:text-base font-medium text-gray-900 break-words'>
+            {user.name || user.email}
+          </p>
+        </div>
+
+        <div className='space-y-4'>
+          <button
+            onClick={handleLogout}
+            disabled={isSubmitting}
+            className={`w-full py-3 md:py-3.5 px-4 rounded-lg text-white font-medium transition-all duration-200 text-sm md:text-base flex items-center justify-center touch-manipulation${
+              isSubmitting
+                ? 'bg-gray-400 cursor-not-allowed'
+                : 'bg-red-600 hover:bg-red-700 focus:ring-4 focus:ring-red-300 active:bg-red-800'
+            }`}
+          >
+            {isSubmitting ? (
+              <div className='flex items-center justify-center'>
+                <div className='animate-spin rounded-full h-4 w-4 md:h-5 md:w-5 border-b-2 border-white mr-2 md:mr-3'></div>
+                <span>Signing out...</span>
+              </div>
+            ) : (
+              <>
+                <LogOut className='w-4 h-4 md:w-5 md:h-5 mr-2' />
+                <span>Sign Out</span>
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
       {/* Mobile Header - Shows on mobile and tablet */}
@@ -122,6 +179,8 @@ const LoginForm = () => {
             Enter your email and password to access your account
           </p>
         </div>
+
+
 
         {/* Login Form */}
         <div className='space-y-4 sm:space-y-6'>

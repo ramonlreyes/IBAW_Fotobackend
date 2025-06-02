@@ -17,15 +17,22 @@ export const AuthProvider = ({ children }) => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const initializeAuth = () => {
+    const initializeAuth = async () => {
       try {
         const savedUser = authService.getCurrentUser();
         if (savedUser) {
-          setUser(savedUser);
+          // Verify the token is still valid with the server
+          const verifiedUser = await authService.verifyToken();
+          if (verifiedUser) {
+            setUser(verifiedUser);
+          } else {
+            // Token is invalid, clear local storage
+            setUser(null);
+          }
         }
       } catch (error) {
         console.error('Error initializing auth:', error);
-        setError('Failed to restore authentication state');
+        setUser(null); // Clear user on error
       } finally {
         setLoading(false);
       }
@@ -38,10 +45,8 @@ export const AuthProvider = ({ children }) => {
     try {
       setLoading(true);
       setError(null);
-
       const userData = await authService.login(email, password);
       setUser(userData);
-
       return userData;
     } catch (error) {
       setError(error.message);
@@ -57,6 +62,7 @@ export const AuthProvider = ({ children }) => {
       await authService.logout();
       setUser(null);
       setError(null);
+      console.log('User logged out successfully');
     } catch (error) {
       console.error('Logout error:', error);
       setUser(null);
@@ -70,10 +76,8 @@ export const AuthProvider = ({ children }) => {
     try {
       setLoading(true);
       setError(null);
-
       const newUser = await authService.register(userData);
       setUser(newUser);
-
       return newUser;
     } catch (error) {
       setError(error.message);
@@ -99,6 +103,7 @@ export const AuthProvider = ({ children }) => {
     return hasRole('admin');
   };
 
+
   const value = {
     user,
     loading,
@@ -109,9 +114,8 @@ export const AuthProvider = ({ children }) => {
     clearError,
     isAuthenticated,
     hasRole,
-    isAdmin
+    isAdmin,
   };
-
 
   return (
     <AuthContext.Provider value={value}>

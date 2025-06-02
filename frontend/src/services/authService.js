@@ -1,15 +1,21 @@
 import api from "./api";
 
 const authService = {
-
   async login(email, password) {
     console.log('API Base URL:', api.defaults.baseURL);
     try {
       const response = await api.post('/auth/login', { email, password });
-
       if (response.data.success && response.data.user) {
-        localStorage.setItem('user', JSON.stringify(response.data.user));
-        return response.data.user;
+        const safeUserData = {
+          id: response.data.user.id,
+          name: response.data.user.name,
+          email: response.data.user.email,
+          role: response.data.user.role,
+          avatar: response.data.user.avatar
+        };
+        
+        localStorage.setItem('user', JSON.stringify(safeUserData));
+        return safeUserData;
       } else {
         throw new Error('Login failed: Invalid response from server');
       }
@@ -19,30 +25,44 @@ const authService = {
       } else if (error.response?.status === 401) {
         throw new Error('Invalid email or password');
       } else if (error.response?.status >= 500) {
-        throw new Error('Server error. PLease try again later.');
+        throw new Error('Server error. Please try again later.');
       } else {
-        throw new Error('Login failed. PLease check your connection and try again.');
+        throw new Error('Login failed. Please check your connection and try again.');
       }
     }
   },
 
   async logout() {
-    try{
-      localStorage.removeItem('user');
-
+    try {
       await api.post('/auth/logout');
+      
+      localStorage.removeItem('user');
+      
+      console.log('Logout successful');
+      return { success: true };
     } catch (error) {
-      console.error('Logout request failes:', error);
+      console.error('Logout request failed:', error);
+      
+      localStorage.removeItem('user');
+      
+      return { success: true, warning: 'Server logout failed but local logout successful' };
     }
   },
 
   async register(userData) {
     try {
       const response = await api.post('/auth/signup', userData);
-
-      if(response.data.sucess && response.data.user) {
-        localStorage.setItem('user', JSON.stringify(response.data.user));
-        return response.data.user;
+      if (response.data.success && response.data.user) {
+        const safeUserData = {
+          id: response.data.user.id,
+          name: response.data.user.name,
+          email: response.data.user.email,
+          role: response.data.user.role,
+          avatar: response.data.user.avatar
+        };
+        
+        localStorage.setItem('user', JSON.stringify(safeUserData));
+        return safeUserData;
       } else {
         throw new Error('Registration failed: Invalid response from server');
       }
@@ -58,9 +78,17 @@ const authService = {
   async verifyToken() {
     try {
       const response = await api.get('/auth/verify');
-      if(response.data.success && response.data.user) {
-        localStorage.setItem('user', JSON.stringify(response.data.user));
-        return response.data.user;
+      if (response.data.success && response.data.user) {
+        const safeUserData = {
+          id: response.data.user.id,
+          name: response.data.user.name,
+          email: response.data.user.email,
+          role: response.data.user.role,
+          avatar: response.data.user.avatar
+        };
+        
+        localStorage.setItem('user', JSON.stringify(safeUserData));
+        return safeUserData;
       }
       return null;
     } catch (error) {
@@ -74,7 +102,6 @@ const authService = {
     if (!localUser) {
       return false;
     }
-
     try {
       const verifiedUser = await this.verifyToken();
       return verifiedUser !== null;
