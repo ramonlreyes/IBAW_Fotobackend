@@ -25,7 +25,7 @@ export const registerUser = async (req, res) => {
 
     if(newUser) {
 
-      const token = generateToken(user);
+      const token = generateToken(newUser);
 
       res.cookie('accessToken', token, {
         httpOnly: true,
@@ -83,7 +83,6 @@ export const loginUser = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      token,
       user: {
         id: user._id,
         name: user.name,
@@ -98,7 +97,7 @@ export const loginUser = async (req, res) => {
 };
 
 export const logoutUser = async(req, res) => {
-  res.cookie('accesToken', '', {
+  res.cookie('accessToken', '', {
     httpOnly: true,
     expires: new Date(0)
   });
@@ -106,3 +105,15 @@ export const logoutUser = async(req, res) => {
   res.status(200).json({success: true, message: 'Logged out successfully'});
 };
 
+export const verifyToken = async (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'Token is valid',
+    user: {
+      id: req.user_id,
+      name: req.user.name,
+      email: req.user.email,
+      role: req.user.role
+    }
+  });
+};

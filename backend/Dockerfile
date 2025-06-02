@@ -1,4 +1,4 @@
-FROM node:16-alpine
+FROM node:20-alpine
 
 WORKDIR /app
 
@@ -12,6 +12,8 @@ RUN mkdir -p uploads
 ENV PORT=5000
 
 EXPOSE 5000
+
+USER node
 
 CMD ["node", "server.js"]
 
