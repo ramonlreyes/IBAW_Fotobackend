@@ -3,6 +3,7 @@ import api from "./api";
 const authService = {
 
   async login(email, password) {
+    console.log('API Base URL:', api.defaults.baseURL);
     try {
       const response = await api.post('/auth/login', { email, password });
 

@@ -22,9 +22,12 @@ const limiter = rateLimit({
 });
 
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' ? 'https://your-production-domain.com' : 'http://localhost:80',
+  origin: process.env.NODE_ENV === 'production' 
+    ? 'https://your-production-domain.com' 
+    : ['http://localhost:80', 'http://localhost:5173', 'http://localhost:3000'],
   credentials: true
 }));
+
 
 app.use(express.json()); // allows us to acept JSON data in the req.body
 app.use(limiter);
