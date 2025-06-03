@@ -14,8 +14,10 @@ export const getUploadsDir = () => {
   return path.join(projectRoot, 'uploads');
 };
 
+export const normalizeTitle = (title) => title.trim().replace(/\s+/g, '_');
+
 export const getAlbumDir = (albumTitle, albumId) => {
-  const folderName = `${albumTitle.replace(/\s+/g, '_')}-${albumId}`;
+  const folderName = `${normalizeTitle(albumTitle)}-${albumId}`;
   return path.join(getUploadsDir(), folderName);
 }
 
@@ -24,8 +26,6 @@ export const getFotoPath = (albumTitle, albumId, filename) => {
 };
 
 export const getUrlPath = (albumTitle, albumId, filename) => {
-  const folderName = `${albumTitle.replace(/\s+/g, '_')}-${albumId}`;
+  const folderName = `${normalizeTitle(albumTitle)}-${albumId}`;
   return `/uploads/${folderName}/${filename}`;
 };
-
-export const normalizeTitle = (title) => title.trim().replace(/\s+/g, '_');
