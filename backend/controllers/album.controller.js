@@ -7,7 +7,13 @@ import { handleApiError } from "../utils/error.handling.js";
 
 export const getAllAlbums = async (req, res) => {
   try {
-    const albums = await Album.find({});
+    const { category } = req.query;
+    let filter = {};
+    if (category && category !== 'all') {
+      filter.category = new RegExp(category, 'i');
+    }
+
+    const albums = await Album.find(filter);
     res.status(200).json({success: true, data: albums});
   } catch (error) {
     res.status(500).json({success: false, message: 'Server Error'});
@@ -35,11 +41,15 @@ export const getAlbum = async (req, res) => {
 
 export const createAlbum = async (req, res) => {
   try {
-    const { title } = req.body;
+    const { title, category } = req.body;
     const albumId = req.albumId || new mongoose.Types.ObjectId();
 
     if(!title) {
       return res.status(400).json({success: false, message: 'Album title is required'});
+    }
+
+    if(!category) {
+      return res.status(400).json({success: false, message: 'Album Category is required'});
     }
 
     if(!req.files || !req.files['cover']) {
@@ -57,6 +67,7 @@ export const createAlbum = async (req, res) => {
     const newAlbum = new Album({
       _id: albumId,
       title,
+      category,
       cover: coverUrl,
       images: imagesUrls
     });

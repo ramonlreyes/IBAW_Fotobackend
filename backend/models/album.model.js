@@ -6,6 +6,7 @@ const albumSchema = new mongoose.Schema({
     ref: 'Album'
   },
   title: {type: String, require: true},
+  category: {type: String, require: true},
   cover: {type: String, require: true},
   images: [{type: String, require: true}],
 }, {

@@ -24,7 +24,10 @@ const limiter = rateLimit({
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' 
     ? 'https://your-production-domain.com' 
-    : ['http://localhost:80', 'http://localhost:5173', 'http://localhost:3000'],
+    : [ 'http://localhost:80',
+        'http://localhost:5173',
+        'http://localhost:3000'
+      ],
   credentials: true
 }));
 
