@@ -1,10 +1,9 @@
-import { useState } from 'react'
-import './App.css'
-import { AuthProvider } from './contexts/AuthContext'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import HomePage from './pages/HomePage/HomePage'
-import LoginPage from './pages/LoginPage/loginPage';
-import AlbumsPage from './pages/AlbumPage/AlbumPage';
+import { AuthProvider } from './features/authentication';
+import { HomePage } from './features/home';
+import { LoginPage } from './features/authentication';
+import { AlbumsPage } from './features/albums';
+
 
 function App() {
   return (
@@ -13,9 +12,10 @@ function App() {
         <Router>
           <div className='App'>
             <Routes>
-              <Route path='/' element={<HomePage />} />
-              <Route path='/login' element={<LoginPage />} />
-              <Route path='/Albums' element={<AlbumsPage />} />
+              <Route path="/" element={<HomePage />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/:category" element={<HomePage />} />
+              <Route path="/album/:albumId" element={<AlbumsPage />} />
             </Routes>
           </div>
         </Router>
