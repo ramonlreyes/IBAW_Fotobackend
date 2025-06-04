@@ -5,6 +5,7 @@ import LoadingSpinner from '../../../../shared/components/LoadingSpinner';
 import ErrorState from '../../../../shared/components/ErrorState';
 import EmptyState from '../../../../shared/components/EmptyState';
 import { getCategoryDisplayName } from '../../../../constants/categories';
+import { RandomImagesCarousel } from '../../../gallery';
 
 function HomePage() {
   const {
@@ -24,45 +25,61 @@ function HomePage() {
     getImageUrl
   } = useAlbumsByCategory(currentCategory);
 
+
+  const handleRetry = () => {
+    window.location.reload();
+  };
+
   if (loading) {
-    return <LoadingSpinner message={`Loading ${getCategoryDisplayName(currentCategory)}...`} />;
+    return (
+      <div className="min-h-screen bg-white flex">
+        <Header categories={availableCategories} />
+        <div className="flex-1">
+          <LoadingSpinner message="Preparing your photography showcase..." />
+        </div>
+      </div>
+    );
   }
 
   if (error) {
-    return <ErrorState error={error} onRetry={() => window.location.reload()} />
+    return (
+      <div className="min-h-screen bg-white flex">
+        <Header categories={availableCategories} />
+        <div className="flex-1">
+          <ErrorState 
+            error={error} 
+            onRetry={handleRetry}
+          />
+        </div>
+      </div>
+    );
   }
 
   return (
     <div className='min-h-screen bg-white flex'>
       <Header categories={availableCategories} />
 
-      <div className='flex-1'>
-        <div className='bg-white border-b border-gray-200'>
-          <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8'>
-            <div className='text-center'>
-              <h1 className='text-3xl font-light tracking-wider text-gray-800 mb-2'>
-                {getCategoryDisplayName(currentCategory)}
-              </h1>
-              <div className='w-16 h-px bg-gray-300 mx-auto mb-4'></div>
-              <p className='text-gray-600'>
-                {albums.length} {albums.length === 1 ? 'Album' : 'Albums'}
-                {currentCategory !== 'all' && ` in ${getCategoryDisplayName(currentCategory)}`}
-              </p>
-            </div>
-          </div>
+      <div className='flex-1 relative'>
+
+        <div className="absolute top-8 left-8 z-20 bg-white bg-opacity-95 px-6 py-3 rounded-lg shadow-lg backdrop-blur-sm">
+          <h1 className="text-lg font-light tracking-wider text-gray-800 mb-1">
+            Ramon Lora Reyes
+          </h1>
+          <p className="text-xs text-gray-600 uppercase tracking-wide">
+            Photography Portfolio
+          </p>
         </div>
 
-        <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12'>
-          {albums.length === 0 ? (
-            <EmptyState category={currentCategory} />
-          ) : (
-            <AlbumGrid
-              albums={albums}
-              onImageError={handleImageError}
-              getImageUrl={getImageUrl}
-              currentCategory={currentCategory}
-            />
-          )}
+        <div className='h-screen w-full'>
+          <RandomImagesCarousel
+            numberOfImages={24}
+            autoAdvance={true}
+            autoAdvanceInterval={7000}
+            showRefreshButton={true}
+            showControls={false}
+            showCounter={false}
+            className='h-full w-full'
+          />
         </div>
       </div>
     </div>

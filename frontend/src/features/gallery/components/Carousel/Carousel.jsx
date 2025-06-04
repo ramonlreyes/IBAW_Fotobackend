@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import albumService from '../../../albums/hooks/albumService';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 const Carousel = ({ 
