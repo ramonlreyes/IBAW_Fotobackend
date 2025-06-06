@@ -1,20 +1,17 @@
 import { useState, useEffect, useCallback } from "react";
-import albumService from "./albumService";
+import { useAlbums } from "../../../shared/services/albumContext";
 
 export const useGetRandomImage = (numberOfImages = 24) => {
+  const { albums, loading: albumsLoading, error: albumsError } = useAlbums();
   const [randomImages, setRandomImages] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [allAvailableImages, setAllAvailableImages] = useState([]);
 
   const shuffleArray = useCallback((array) => {
     const shuffled = [...array];
-
     for(let i = shuffled.length - 1; i > 0; i--) {
       const randomIndex = Math.floor(Math.random() * (i + 1));
       [shuffled[i], shuffled[randomIndex]] = [shuffled[randomIndex], shuffled[i]];
     }
-
     return shuffled;
   }, []);
 
@@ -41,75 +38,58 @@ export const useGetRandomImage = (numberOfImages = 24) => {
     };
   }, []);
 
-  const fetchRandomImages = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      const albumsResponse = await albumService.getAllAlbums();
-
-      if (!albumsResponse.success) {
-        throw new Error(albumsResponse.message || 'Failed to fetch albums');
-      }
-
-      const albums = albumsResponse.data;
-      console.log(`Processing ${albums.length} albums for random image selection`);
-
-      // Extract all images from all albums
-      const allImages = [];
-
-      albums.forEach(album => {
-        if (!album.images || !Array.isArray(album.images) || album.images.length === 0) {
-          console.warn(`Album "${album.title}" has no images, skipping`);
-          return;
-        }
-
-        // Transform each image for the carousel
-        album.images.forEach((imagePath, index) => {
-          const transformedImage = transformImagesForCarousel(imagePath, album, index);
-          allImages.push(transformedImage);
-        });
-
-        // Add cover image if it's not already in the images array
-        if (album.cover && !album.images.includes(album.cover)) {
-          const coverImage = transformImagesForCarousel(album.cover, album, -1);
-          coverImage.title = `${album.title} (Cover)`;
-          coverImage.description = `Cover image from ${album.title}`;
-          allImages.push(coverImage);
-        }
-      });
-
-      console.log(`Found ${allImages.length} total images across all albums`);
-
-      setAllAvailableImages(allImages);
-
-      const shuffledImages = shuffleArray(allImages);
-      const selectedImages = shuffledImages.slice(0, numberOfImages);
-
-      console.log(`Selected ${selectedImages.length} random images for display`);
-      setRandomImages(selectedImages);
-
-    } catch (error) {
-      const errorMessage = error.response?.data?.message || error.message || 'Failed to load portfolio images';
-      setError(errorMessage);
-      console.error('Error fetching random portfolio images:', error);
+  // Process albums whenever they change
+  useEffect(() => {
+    if (!albums || albums.length === 0) {
       setRandomImages([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [numberOfImages, shuffleArray, transformImagesForCarousel]);
-
-  const refreshRandomSelection = useCallback(() => {
-    if(allAvailableImages.length === 0) {
-      fetchRandomImages();
+      setAllAvailableImages([]);
       return;
     }
 
-    // Shuffle existing images and select new ones
+    console.log(`Processing ${albums.length} albums for random image selection`);
+
+    // Extract all images from all albums
+    const allImages = [];
+
+    albums.forEach(album => {
+      if (!album.images || !Array.isArray(album.images) || album.images.length === 0) {
+        console.warn(`Album "${album.title}" has no images, skipping`);
+        return;
+      }
+
+      // Transform each image for the carousel
+      album.images.forEach((imagePath, index) => {
+        const transformedImage = transformImagesForCarousel(imagePath, album, index);
+        allImages.push(transformedImage);
+      });
+
+      // Add cover image if it's not already in the images array
+      if (album.cover && !album.images.includes(album.cover)) {
+        const coverImage = transformImagesForCarousel(album.cover, album, -1);
+        coverImage.title = `${album.title} (Cover)`;
+        coverImage.description = `Cover image from ${album.title}`;
+        allImages.push(coverImage);
+      }
+    });
+
+    console.log(`Found ${allImages.length} total images across all albums`);
+
+    setAllAvailableImages(allImages);
+
+    const shuffledImages = shuffleArray(allImages);
+    const selectedImages = shuffledImages.slice(0, numberOfImages);
+
+    console.log(`Selected ${selectedImages.length} random images for display`);
+    setRandomImages(selectedImages);
+  }, [albums, numberOfImages, shuffleArray, transformImagesForCarousel]);
+
+  const refreshRandomSelection = useCallback(() => {
+    if(allAvailableImages.length === 0) return;
+
     const shuffledImages = shuffleArray(allAvailableImages);
     const selectedImages = shuffledImages.slice(0, numberOfImages);
     setRandomImages(selectedImages);
-  }, [allAvailableImages, numberOfImages, shuffleArray, fetchRandomImages]);
+  }, [allAvailableImages, numberOfImages, shuffleArray]);
 
   const getRandomImageByCategory = useCallback((category) => {
     const categoryImages = allAvailableImages.filter(image =>
@@ -120,19 +100,13 @@ export const useGetRandomImage = (numberOfImages = 24) => {
     return shuffledImages.slice(0, numberOfImages);
   }, [allAvailableImages, numberOfImages, shuffleArray]);
 
-  // Fetch images when the hook mounts or numberOfImages changes
-  useEffect(() => {
-    fetchRandomImages();
-  }, [fetchRandomImages]);
-
-  // Return the hook's state and functions
   return {
     randomImages,
-    loading,
-    error,
+    loading: albumsLoading,
+    error: albumsError,
     totalAvailableImages: allAvailableImages.length,
     allAvailableImages,
-    refetch: fetchRandomImages,
+    refetch: () => {}, // Context handles refetching
     refreshRandomSelection,
     getRandomImageByCategory,
     shuffleArray

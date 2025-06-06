@@ -20,7 +20,6 @@ const RandomImagesCarousel = ({
     refreshRandomSelection
   } = useGetRandomImage(numberOfImages);
 
-
   const handleRefresh = () => {
     refreshRandomSelection();
   };
@@ -31,22 +30,26 @@ const RandomImagesCarousel = ({
 
   if (loading) {
     return (
-      <LoadingSpinner message="Loading Portfolio Showcase..." />
+      <div className="w-full h-[400px] flex items-center justify-center">
+        <LoadingSpinner message="Loading Portfolio Showcase..." />
+      </div>
     );
   }
 
   if (error) {
     return (
-      <ErrorState
-        error={error}
-        onRetry={handleRetry}
-      />
+      <div className="w-full h-[400px] flex items-center justify-center">
+        <ErrorState
+          error={error}
+          onRetry={handleRetry}
+        />
+      </div>
     );
   }
 
   if (randomImages.length === 0) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-gray-50">
+      <div className="w-full h-[400px] flex items-center justify-center bg-gray-50">
         <div className="text-center text-gray-500">
           <p className="text-lg mb-2">No Portfolio Images Found</p>
           <p className="text-sm">Images will appear here when albums are uploaded</p>
@@ -56,12 +59,12 @@ const RandomImagesCarousel = ({
   }
 
   return (
-    <div className={`relative h-full ${className}`}>
+    <div className={`relative w-full h-[400px] max-w-4xl mx-auto ${className}`}>
       {/* Refresh Button */}
       {showRefreshButton && (
         <button
           onClick={handleRefresh}
-          className="absolute top-4 right-4 z-20 bg-white bg-opacity-90 hover:bg-opacity-100 rounded-full p-3 shadow.lg transition-all duration-200 group"
+          className="absolute top-4 right-4 z-30 bg-white bg-opacity-90 hover:bg-opacity-100 rounded-full p-3 shadow-lg transition-all duration-200 group"
           aria-label="Show different random images"
           title="Refresh image selection"
         >
@@ -72,21 +75,14 @@ const RandomImagesCarousel = ({
         </button>
       )}
 
-      {/* Portfolio info Overlay */}
-      <div className="absolute top-4 left-4 z-20 bg-white bg-opacity-90 px-4 py-2 rounded-lg shadow-lg">
-        <p className="text-sm font-medium text-gray-800">Portfolio Showcase</p>
-        <p className="text-xs text-gray-600">
-          {randomImages.length} of {totalAvailableImages} images
-        </p>
-      </div>
 
       {/* Main Carousel component */}
       <Carousel
         images={randomImages}
         autoAdvance={autoAdvance}
         autoAdvanceInterval={autoAdvanceInterval}
-        showControls={true}
-        showCounter={true}
+        showControls={false}
+        showCounter={false}
       />
     </div>
   );
