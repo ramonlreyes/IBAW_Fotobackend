@@ -62,7 +62,7 @@ function HomePage() {
           <RandomImagesCarousel
             numberOfImages={24}
             autoAdvance={true}
-            autoAdvanceInterval={10000}
+            autoAdvanceInterval={8000}
             showRefreshButton={true}
             showControls={false}
             showCounter={false}

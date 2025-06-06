@@ -27,7 +27,9 @@ export const createFallbackImage = () => {
   `)}`;
 };
 
-export const handleImageError = (e) => {
-    onImageError(album._id);
-    e.target.src = createFallbackImage();
+export const handleImageError = (e, onImageError, albumId) => {
+  if (onImageError && albumId) {
+    onImageError(albumId)
+  }
+  e.target.src = createFallbackImage();
   };

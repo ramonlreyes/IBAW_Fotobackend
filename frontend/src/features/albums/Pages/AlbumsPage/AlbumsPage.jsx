@@ -18,41 +18,58 @@ const AlbumsPage = () => {
     refetch 
   } = useAlbumsByCategory(category);
 
-
   const handleRetry = () => {
     refetch();
   };
 
   // Early returns for different states
   if (loading) {
-    return <LoadingSpinner message="Loading albums..." />;
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <LoadingSpinner message="Loading albums..." />
+      </div>
+    );
   }
 
   if (error) {
-    return <ErrorState error={error} onRetry={handleRetry} />;
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <ErrorState error={error} onRetry={handleRetry} />
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header Section */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen bg-white">
+      {/* Clean Header - similar to cassandraladru.com */}
+      <div className="border-b border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="text-center">
-            <h1 className="text-3xl font-light tracking-wider text-gray-800 mb-2">
+            {/* Back navigation */}
+            <button
+              onClick={() => navigate('/')}
+              className="inline-flex items-center text-gray-600 hover:text-gray-900 transition-colors duration-200 mb-8"
+            >
+              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              <span className="text-sm font-light tracking-wide">Portfolio</span>
+            </button>
+
+            {/* Category Title */}
+            <h1 className="text-4xl md:text-5xl font-light tracking-wide text-gray-900 mb-2">
               {getCategoryDisplayName(category)}
             </h1>
-            <div className="w-16 h-px bg-gray-300 mx-auto mb-4"></div>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              {albums.length} {albums.length === 1 ? 'Album' : 'Albums'} capturing moments and memories
-            </p>
           </div>
         </div>
       </div>
 
-      {/* Albums Grid */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {albums.length === 0 ? (
-          <EmptyState category={category} />
+      {/* Albums Grid Container */}
+      <div className="py-16 px-4 sm:px-6 lg:px-8">
+        {!albums || albums.length === 0 ? (
+          <div className="flex items-center justify-center min-h-[60vh]">
+            <EmptyState category={category} />
+          </div>
         ) : (
           <AlbumGrid
             albums={albums}

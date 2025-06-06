@@ -5,7 +5,7 @@ export const PORTFOLIO_CATEGORIES = [
     name: 'All',
     displayName: 'All Work',
     description: 'Browse all photography collections',
-    path: '/'
+    path: '/all'
   },
   {
     id: 'portraits',

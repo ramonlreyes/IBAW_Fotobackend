@@ -16,7 +16,7 @@ function App() {
             <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/login" element={<LoginPage />} />
-              <Route path="/:category" element={<HomePage />} />
+              <Route path="/:category" element={<AlbumsPage />} />
               <Route path="/album/:albumId" element={<AlbumsPage />} />
             </Routes>
           </div>

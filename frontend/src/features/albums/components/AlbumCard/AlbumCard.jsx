@@ -1,66 +1,68 @@
-import { Eye, Calendar, Image } from 'lucide-react';
-import { formatDate, createFallbackImage, handleImageError } from '../utils/albumHelpers';
+import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+
 
 const AlbumCard = ({ album, onAlbumClick, onImageError, getImageUrl }) => {
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageFailed, setImageFailed] = useState(false);
+
+  const handleImageLoad = () => {
+    setImageLoaded(true);
+  };
+
+  const handleImageError = (e) => {
+    setImageFailed(true);
+    if (onImageError) {
+      onImageError(album._id);
+    }
+  };
 
   return (
     <div
-      className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:-translate-y-1 group"
+      className="relative overflow-hidden cursor-pointer group transition-all duration-300 hover:opacity-90 mb-4"
       onClick={() => onAlbumClick(album._id)}
     >
-      <div className="relative overflow-hidden">
-        {getImageUrl(album) ? (
-          <img
-            src={getImageUrl(album)}
-            alt={album.title}
-            className="w-full h-64 object-cover transition-transform duration-300 group-hover:scale-105"
-            loading="lazy"
-            onError={handleImageError}
-          />
-        ) : (
-          <div className="w-full h-64 bg-gray-100 flex items-center justify-center">
-            <div className="text-center text-gray-400">
-              <Image size={48} className="mx-auto mb-2" />
-              <p className="text-sm">No Image</p>
+      {/* Background Image */}
+      {getImageUrl(album) && !imageFailed ? (
+        <img
+          src={getImageUrl(album)}
+          alt={album.title}
+          className={`w-full h-auto object-cover transition-all duration-700 ${
+            imageLoaded ? 'opacity-100' : 'opacity-0'
+          }`}
+          onLoad={handleImageLoad}
+          onError={handleImageError}
+        />
+      ) : (
+        <div className="w-full aspect-[3/2] bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+          <div className="text-gray-400 text-center">
+            <div className="w-12 h-12 mx-auto mb-2 bg-gray-300 rounded-lg flex items-center justify-center">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
             </div>
-          </div>
-        )}
-        
-        {/* Hover Overlay */}
-        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
-          <div className="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center space-x-2">
-            <Eye size={20} />
-            <span className="font-medium">View Album</span>
+            <p className="text-xs">No Image</p>
           </div>
         </div>
-      </div>
+      )}
 
-      <div className="p-6">
-        <h3 className="text-xl font-medium text-gray-800 mb-3 line-clamp-2">
-          {album.title}
-        </h3>
-        
-        <div className="space-y-2 text-sm text-gray-600">
-          <div className="flex items-center space-x-2">
-            <Image size={16} />
-            <span>{album.images?.length || 0} photos</span>
-          </div>
+      {/* Overlay Content - appears on hover */}
+      <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-300 flex items-center justify-center">
+        <div className="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-center px-4">
+          <h3 className="font-medium text-lg mb-2 drop-shadow-lg">
+            {album.title}
+          </h3>
           
           {album.createdAt && (
-            <div className="flex items-center space-x-2">
-              <Calendar size={16} />
-              <span>{formatDate(album.createdAt)}</span>
-            </div>
+            <p className="text-sm opacity-90 drop-shadow-lg">
+              {new Date(album.createdAt).toLocaleDateString('en-GB', {
+                month: 'long',
+                day: 'numeric',
+                year: 'numeric'
+              })}
+            </p>
           )}
         </div>
-        
-        {album.category && (
-          <div className="mt-4">
-            <span className="inline-block bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs font-medium uppercase tracking-wide">
-              {album.category}
-            </span>
-          </div>
-        )}
       </div>
     </div>
   );
