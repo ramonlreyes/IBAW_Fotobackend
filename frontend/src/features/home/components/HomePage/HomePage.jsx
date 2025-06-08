@@ -17,7 +17,6 @@ function HomePage() {
     getNavigationItems
   } = useCategoryNavigation();
 
-  // Use the shared albums context instead of useAlbumsByCategory
   const { albums, loading, error } = useAlbums();
 
   const handleRetry = () => {

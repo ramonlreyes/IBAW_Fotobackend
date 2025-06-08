@@ -8,7 +8,7 @@ const router = express.Router();
 //Albums
 
 router.get('/', getAllAlbums);
-router.get('/:albumId', getAlbum);
+router.get('/:id', getAlbum);
 router.post('/', protect, isAdmin, uploadMiddleware, createAlbum);
 router.get('/:id/images/:index', getAlbumImage);
 router.put('/:id', protect, isAdmin, uploadMiddleware, updateAlbum);

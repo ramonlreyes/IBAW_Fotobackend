@@ -29,12 +29,14 @@ export const getAlbum = async (req, res) => {
     }
 
     const album = await Album.findById(id);
+    console.log('album found:', album);
     if (!album) {
       return res.status(404).json({success: false, message: 'Album not found'});
     }
     
     res.status(200).json({success: true, data: album});
   } catch (error) {
+    console.error('Error in getAlbum:', error);
     res.status(500).json({success: false, message: 'Server Error'});
   }
 };

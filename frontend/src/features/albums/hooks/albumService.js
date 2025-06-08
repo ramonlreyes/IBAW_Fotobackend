@@ -19,7 +19,8 @@ const albumService = {
       const response = await api.get(`/albums/${id}`);
       return response.data;
     } catch (error) {
-      console.error('Error fetching album:', error);
+      console.error('Error fetching album:', error.response?.data);
+      console.error('Error status:', error.response?.status);
       throw error;
     }
   },
