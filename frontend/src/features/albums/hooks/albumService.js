@@ -29,6 +29,10 @@ const albumService = {
     try {
       const formData = new FormData();
       formData.append('title', albumData.title);
+
+      if (albumData.description) {
+        formData.append('description', albumData.description);
+      }
       
       if (albumData.category) {
         formData.append('category', albumData.category);
@@ -62,6 +66,10 @@ const albumService = {
       
       if (updateData.title) {
         formData.append('title', updateData.title);
+      }
+
+      if (updateData.description !== undefined) {
+        formData.append('description', updateData.description);
       }
       
       if (updateData.category) {
@@ -99,6 +107,16 @@ const albumService = {
       throw error;
     }
   },
+
+  async deleteAlbumImage(albumId, imageId) {
+    try {
+      const response = await api.delete(`/albums/${albumId}/images/${imageId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error deleting album image:', error);
+      throw error;
+    }
+  }, 
 
   buildImageUrl(imagePath) {
     const baseURL = import.meta.env.VITE_UPLOAD_URL || 'http://localhost:5000';

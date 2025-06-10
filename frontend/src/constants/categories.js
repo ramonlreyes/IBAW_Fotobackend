@@ -1,3 +1,6 @@
+import { Icon } from "lucide-react";
+import { useAuth } from "../features/authentication/contexts/AuthContext";
+
 
 export const PORTFOLIO_CATEGORIES = [
   {
@@ -30,6 +33,19 @@ export const PORTFOLIO_CATEGORIES = [
   }
 ];
 
+export const ADMIN_CATEGORIES = [
+  {
+      id: 'admin',
+      name: 'Admin',
+      displayName: '-',
+      description: 'Manage Albums and Website Content',
+      path: '/admin',
+      isAdmin: true,
+      requiresAuth: true,
+      Icon: 'Settings'
+    }
+];
+
 export const findCategoryByIdentifier = (identifier) => {
   return PORTFOLIO_CATEGORIES.find(cat => 
     cat.id === identifier.toLowerCase() || 
@@ -44,4 +60,15 @@ export const getCategoryDisplayName = (categoryIdentifier) => {
   
   const category = findCategoryByIdentifier(categoryIdentifier);
   return category ? category.displayName : categoryIdentifier;
+};
+
+export const getCategoriesForUser = (isAdmin = false) => {
+  if (isAdmin) {
+    return [
+      ...PORTFOLIO_CATEGORIES,
+      { id: 'divider', isDivider: true }, 
+      ...ADMIN_CATEGORIES
+    ];
+  }
+  return PORTFOLIO_CATEGORIES;
 };

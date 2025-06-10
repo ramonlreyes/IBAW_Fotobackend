@@ -2,9 +2,14 @@ import { useMobileMenu } from '../../hooks/useMobileMenu';
 import MobileHeader from '../MobileHeader';
 import MobileMenu from '../MobileMenu';
 import DesktopSidebar from '../DesktopSidebar';
+import { useAuth } from '../../../authentication/contexts/AuthContext';
+import { getCategoriesForUser } from '../../../../constants/categories';
 
-const Header = ({ categories }) => {
+const Header = () => {
   const { isMobileMenuOpen, toggleMenu, closeMenu } = useMobileMenu();
+  const { isAdmin } = useAuth();
+
+  const categories = getCategoriesForUser(isAdmin());
 
 
   return (
