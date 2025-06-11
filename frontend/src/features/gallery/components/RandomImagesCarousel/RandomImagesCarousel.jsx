@@ -1,4 +1,3 @@
-import { RefreshCw } from "lucide-react";
 import { useGetRandomImage } from "../../../albums";
 import Carousel from '../Carousel';
 import LoadingSpinner from "../../../../shared/components/LoadingSpinner";
@@ -8,7 +7,6 @@ const RandomImagesCarousel = ({
   numberOfImages = 24,
   autoAdvance = true,
   autoAdvanceInterval = 8000,
-  showRefreshButton = true,
   className = ''
 }) => {
   const {
@@ -16,13 +14,8 @@ const RandomImagesCarousel = ({
     loading,
     error,
     totalAvailableImages,
-    refetch,
-    refreshRandomSelection
+    refetch
   } = useGetRandomImage(numberOfImages);
-
-  const handleRefresh = () => {
-    refreshRandomSelection();
-  };
 
   const handleRetry = () => {
     refetch();
@@ -59,23 +52,7 @@ const RandomImagesCarousel = ({
   }
 
   return (
-    <div className={`relative w-full h-[400px] max-w-4xl mx-auto ${className}`}>
-      {/* Refresh Button */}
-      {showRefreshButton && (
-        <button
-          onClick={handleRefresh}
-          className="absolute top-4 right-4 z-30 bg-white bg-opacity-90 hover:bg-opacity-100 rounded-full p-3 shadow-lg transition-all duration-200 group"
-          aria-label="Show different random images"
-          title="Refresh image selection"
-        >
-          <RefreshCw
-            size={20}
-            className="text-gray-700 group-hover:rotate-180 transition-transform duration-300"
-          />
-        </button>
-      )}
-
-
+    <div className={`relative w-full ${className}`}>
       {/* Main Carousel component */}
       <Carousel
         images={randomImages}

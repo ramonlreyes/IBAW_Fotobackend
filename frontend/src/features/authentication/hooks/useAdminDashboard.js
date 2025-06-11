@@ -7,7 +7,7 @@ import { useAlbumForm } from "../../albums/hooks/useAlbumForm";
 export const useAdminDashboard = () => {
   const { user, isAdmin } = useAuth();
   const { albums, loading: albumsLoading } = useAlbums();
-  const { createAlbum, updatAlbum, deleteAlbum, deleteAlbumImage, uploading } = useAdminAlbumService();
+  const { createAlbum, updateAlbum, deleteAlbum, deleteAlbumImage, uploading } = useAdminAlbumService();
   const {
     formData,
     errors,

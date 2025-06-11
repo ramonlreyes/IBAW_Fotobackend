@@ -8,17 +8,41 @@ import rateLimit from "express-rate-limit";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 
-
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 const __dirname = path.dirname(new URL(import.meta.url).pathname);
 
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
-  message: 'Too many Request, please try again later.'
+
+const generalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 700, 
+  message: 'Too many requests, please try again later.',
+  standardHeaders: true, 
+  legacyHeaders: false, 
+});
+
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 20, 
+  message: 'Too many authentication attempts, please try again later.',
+  skipSuccessfulRequests: true, // Don't count successful requests
+});
+
+
+const writeLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, 
+  message: 'Too many write operations, please try again later.',
+});
+
+
+const staticFileLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 2000, 
+  message: 'Too many file requests, please try again later.',
 });
 
 app.use(cors({
@@ -31,17 +55,32 @@ app.use(cors({
   credentials: true
 }));
 
-
-app.use(express.json()); // allows us to acept JSON data in the req.body
-app.use(limiter);
+app.use(express.json());
 app.use(cookieParser());
 
-app.use('/api/albums', albumRoutes );
-app.use('/api/auth', authRoutes);
-app.use("/uploads", express.static(path.join(__dirname, 'uploads')));
 
+app.use('/api/auth', authLimiter, authRoutes);
+
+
+app.use('/api/albums', (req, res, next) => {
+  if (['POST', 'PUT', 'DELETE'].includes(req.method)) {
+    writeLimiter(req, res, next);
+  } else {
+    generalLimiter(req, res, next);
+  }
+}, albumRoutes);
+
+
+app.use("/uploads", staticFileLimiter, express.static(path.join(__dirname, 'uploads')));
+
+
+app.get('/api/health', (req, res) => {
+  res.status(200).json({ status: 'healthy' });
+});
+
+app.use(generalLimiter);
 
 app.listen(PORT, () => {
   connectDB();
-  console.log('server started at localHost:' + PORT);
+  console.log('Server started at localhost:' + PORT);
 });

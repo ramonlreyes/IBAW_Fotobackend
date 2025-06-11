@@ -8,7 +8,8 @@ const AlbumCard = ({
   onImageError,
   getImageUrl,
   type = 'collection',
-  albumTitle }) => {
+  albumTitle,
+  gap = 4 }) => {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageFailed, setImageFailed] = useState(false);
 
@@ -28,9 +29,20 @@ const AlbumCard = ({
     ? getImageUrl(album.path || album)
     : getImageUrl(album);
 
+  // Get margin class based on gap to sync with grid spacing
+  const getMarginClass = () => {
+    switch (gap) {
+      case 2: return 'mb-2';
+      case 4: return 'mb-4';
+      case 6: return 'mb-6';
+      case 8: return 'mb-8';
+      default: return 'mb-4';
+    }
+  };
+
   return (
     <div
-      className="relative overflow-hidden cursor-pointer group transition-all duration-300 hover:opacity-90 mb-4"
+      className={`relative overflow-hidden cursor-pointer group transition-all duration-300 hover:opacity-90 ${getMarginClass()}`}
       onClick={() => onItemClick(isAlbumDetail ? album : album._id)}
     >
       {/* Background Image */}

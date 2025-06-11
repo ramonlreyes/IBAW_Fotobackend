@@ -15,8 +15,6 @@ const AlbumGrid = ({
   onItemClick
 }) => {
 
-
-
   const navigate = useNavigate();
 
   // Add safety check for albums prop
@@ -34,35 +32,39 @@ const AlbumGrid = ({
   const getColumnClasses = () => {
     switch (columns) {
       case 1: return 'columns-1';
-      case 2: return 'columns-1 md:columns-2';
-      case 3: return 'columns-1 md:columns-2 lg:columns-3';
+      case 2: return 'columns-1 lg:columns-2';
+      case 3: return 'columns-1 lg:columns-2 xl:columns-3';
       case 4: return 'columns-1 md:columns-2 lg:columns-3 xl:columns-4';
-      default: return 'columns-1 md:columns-2';
+      default: return 'columns-1 lg:columns-2';
     }
   };
 
   const getGapClass = () => {
     switch (gap) {
+      case 2: return 'gap-2';
       case 4: return 'gap-4';
       case 6: return 'gap-6';
       case 8: return 'gap-8';
-      default: return 'gap-8';
+      default: return 'gap-4';
     }
   }
 
   return (
-    <div className={`${getColumnClasses()} ${getGapClass()} max-w-6xl mx-auto`}>
-      {albums.map((album, index) => (
-          <AlbumCard
-            key={album._id || index}
-            album={album}
-            onItemClick={() => navigate(`/album/${album._id}`)}
-            onImageError={onImageError}
-            getImageUrl={getImageUrl}
-            type={type}
-            albumTitle={albumTitle}
-          />
-      ))}
+    <div className="mx-auto px-4 sm:px-6 lg:px-8" style={{ maxWidth: '105rem' }}>
+      <div className={`${getColumnClasses()} ${getGapClass()}`}>
+        {albums.map((album, index) => (
+            <AlbumCard
+              key={album._id || index}
+              album={album}
+              onItemClick={() => navigate(`/album/${album._id}`)}
+              onImageError={onImageError}
+              getImageUrl={getImageUrl}
+              type={type}
+              albumTitle={albumTitle}
+              gap={gap}
+            />
+        ))}
+      </div>
     </div>
   );
 };

@@ -73,6 +73,8 @@ const AlbumsPage = () => {
             onImageError={handleImageError}
             getImageUrl={getImageUrl}
             currentCategory={category}
+            columns={2}
+            gap={2}
           />
         )}
       </div>
