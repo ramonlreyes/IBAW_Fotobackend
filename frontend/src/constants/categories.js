@@ -37,7 +37,7 @@ export const ADMIN_CATEGORIES = [
   {
       id: 'admin',
       name: 'Admin',
-      displayName: '-',
+      displayName: 'Admin',
       description: 'Manage Albums and Website Content',
       path: '/admin',
       isAdmin: true,

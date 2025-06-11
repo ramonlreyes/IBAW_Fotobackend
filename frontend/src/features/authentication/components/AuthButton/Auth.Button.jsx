@@ -3,13 +3,13 @@ import { LogOut, User } from 'lucide-react';
 import { useAuthActions } from '../../hooks/useAuthActions';
 
 const AuthButton = ({ isMobile = false }) => {
-
   const { user, isAuthenticated, handleLogout } = useAuthActions();
-  
+ 
   const baseClasses = `block w-full py-2 px-4 text-sm tracking-wide border rounded transition-colors duration-200 text-center ${
     isMobile ? 'mb-4' : ''
   }`;
 
+  // If user is authenticated, show logout button
   if (user && isAuthenticated) {
     return (
       <button
@@ -24,11 +24,11 @@ const AuthButton = ({ isMobile = false }) => {
     );
   }
 
+  // If user is not authenticated, show only Login button
   return (
     <Link
-      to='/login'
+      to='/auth'
       className={`${baseClasses} text-gray-600 border-gray-300 hover:bg-gray-50 hover:text-gray-800`}
-      onClick={() => setIsMobileMenuOpen(false)}
     >
       <div className='flex items-center justify-center'>
         <User size={16} className='mr-2' />
