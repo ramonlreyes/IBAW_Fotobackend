@@ -22,7 +22,6 @@ export const AlbumProvider = ({ children }) => {
     // Create a new fetch promise
     fetchPromise = (async () => {
       try {
-        console.log('Fetching albums...');
         const response = await albumService.getAllAlbums();
         
         if (!isMountedRef.current) return;

@@ -136,6 +136,16 @@ export const updateAlbum = async (req, res) => {
         album.images = updatedImages;
       }
     }
+
+    // Handle category update
+    if (req.body.category && req.body.category !== album.category) {
+      album.category = req.body.category;
+    }
+
+    // Handle description update
+    if (req.body.description !== undefined) {
+      album.description = req.body.description;
+    }
     
     // Handle new cover upload
     if(req.files && req.files['cover']) {
@@ -172,6 +182,7 @@ export const updateAlbum = async (req, res) => {
       
       album.images.push(...newImageUrls);
     }
+
     
     // Save the updated album
     try {

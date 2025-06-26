@@ -46,7 +46,6 @@ export const useGetRandomImage = (numberOfImages = 24) => {
       return;
     }
 
-    console.log(`Processing ${albums.length} albums for random image selection`);
 
     // Extract all images from all albums
     const allImages = [];
@@ -72,14 +71,12 @@ export const useGetRandomImage = (numberOfImages = 24) => {
       }
     });
 
-    console.log(`Found ${allImages.length} total images across all albums`);
 
     setAllAvailableImages(allImages);
 
     const shuffledImages = shuffleArray(allImages);
     const selectedImages = shuffledImages.slice(0, numberOfImages);
 
-    console.log(`Selected ${selectedImages.length} random images for display`);
     setRandomImages(selectedImages);
   }, [albums, numberOfImages, shuffleArray, transformImagesForCarousel]);
 

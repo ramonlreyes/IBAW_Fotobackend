@@ -24,7 +24,6 @@ export const useAlbumData = ({ category = null, albumId = null} = {}) => {
   // Fetch for single album (Id)
   useEffect(() => {
 
-    console.log('useAlbum - albumId:', albumId);
     if (!albumId) {
       setSingleAlbum(null);
       return;

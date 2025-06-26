@@ -29,8 +29,8 @@ const AdminAlbumCard = ({ album, onEdit, onDelete }) => {
         <p className='text-sm text-gray-600 mb-3 line-clamp-2'>{album.description}</p>
 
         <div className='felx items-center justify-between'>
-          <span className='text-xs text-gray-500'>
-            {album.images?.length || 0} Images
+          <span className='text-xs text-gray-500 pe-2'>
+            {album.images?.length || 0} Images 
           </span>
           <span className='text-xs text-gray-500'>
             {album.views || 0} Views

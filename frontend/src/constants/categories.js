@@ -18,6 +18,13 @@ export const PORTFOLIO_CATEGORIES = [
     path: '/portraits'
   },
   {
+    id: 'weddings',
+    name: 'Weddings',
+    displayName: 'Weddings Photography',
+    description: 'Weddings celebrations',
+    path: '/weddings'
+  },
+  {
     id: 'landscape',
     name: 'Landscape',
     displayName: 'Landscape Photography', 
@@ -44,6 +51,23 @@ export const ADMIN_CATEGORIES = [
       requiresAuth: true,
       Icon: 'Settings'
     }
+];
+
+export const CONTACT_CATEGORIES = [
+  {
+    id: 'aboutMe',
+    name: 'AboutMe',
+    displayName: 'About Me',
+    description: 'About Me',
+    path: '/aboutMe'
+  },
+  {
+    id: 'contact',
+    name: 'contact',
+    displayName: 'Contact',
+    description: 'contact',
+    path: '/contact'
+  }
 ];
 
 export const findCategoryByIdentifier = (identifier) => {

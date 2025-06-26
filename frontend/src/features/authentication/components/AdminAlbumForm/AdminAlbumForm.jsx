@@ -1,4 +1,5 @@
 import { Save, X } from 'lucide-react';
+import { PORTFOLIO_CATEGORIES } from '../../../../constants/categories';
 
 const AdminAlbumForm = ({
   isEdit = false,
@@ -9,6 +10,9 @@ const AdminAlbumForm = ({
   onSubmit,
   onClose
 }) => {
+
+  const avialableCategories = PORTFOLIO_CATEGORIES.filter(category => category.id !== 'all');
+
   return(
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
@@ -59,12 +63,11 @@ const AdminAlbumForm = ({
                 required
               >
                 <option value="">Select a category</option>
-                <option value="portraits">Portraits</option>
-                <option value="landscape">Landscape</option>
-                <option value="events">Events</option>
-                <option value="wildlife">Wildlife</option>
-                <option value="street">Street Photography</option>
-                <option value="macro">Macro</option>
+                {avialableCategories.map(category => (
+                  <option key={category.id} value={category.id}>
+                    {category.displayName}
+                  </option>
+                ))}
               </select>
               {errors.category && <p className="mt-1 text-sm text-red-600">{errors.category}</p>}
             </div>
