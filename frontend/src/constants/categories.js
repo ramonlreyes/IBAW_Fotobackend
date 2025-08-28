@@ -87,12 +87,17 @@ export const getCategoryDisplayName = (categoryIdentifier) => {
 };
 
 export const getCategoriesForUser = (isAdmin = false) => {
+  const categories = [
+    ...PORTFOLIO_CATEGORIES,
+    { id: 'portfolio-divider', isDivider: true },
+    ...CONTACT_CATEGORIES
+  ];
+
   if (isAdmin) {
-    return [
-      ...PORTFOLIO_CATEGORIES,
-      { id: 'divider', isDivider: true }, 
+    categories.push(
+      { id: 'admin-divider', isDivider: true },
       ...ADMIN_CATEGORIES
-    ];
+    );
   }
-  return PORTFOLIO_CATEGORIES;
+  return categories;
 };

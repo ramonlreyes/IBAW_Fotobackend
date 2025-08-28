@@ -6,6 +6,8 @@ import { AuthPage } from './features/authentication';
 import { AlbumsPage } from './features/albums';
 import { AlbumDetailPage } from './features/albums';
 import { AdminDashboard } from './features/authentication';
+import AboutMePage from './features/contact/pages/AboutMePage';
+import ContactPage from './features/contact/pages/ContactPage';
 
 
 function App() {
@@ -21,6 +23,8 @@ function App() {
               <Route path="/:category" element={<AlbumsPage />} />
               <Route path="/album/:albumId" element={<AlbumDetailPage />} />
               <Route path='/admin' element={<AdminDashboard />} />
+              <Route path='/aboutMe' element={<AboutMePage />} />
+              <Route path='/contact' element={<ContactPage />} />
             </Routes>
           </div>
         </Router>

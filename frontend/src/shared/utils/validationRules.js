@@ -23,5 +23,24 @@ export const validationRules = {
   
   agreeToTerms: [
     (value) => !value ? 'You must agree to the terms and conditions' : ''
+  ],
+
+  firstName: [
+    (value) => !value?.trim() ? 'First name is required' : '',
+    (value) => value?.length < 2 ? 'First name must be at least 2 characters' : ''
+  ],
+
+  lastName: [
+    (value) => !value?.trim() ? 'Last name is required' : '',
+    (value) => value?.length < 2 ? 'Last name must be at least 2 characters' : ''
+  ],
+
+  phoneNumber: [
+    (value) => value && !/^[\d\s\-\+\(\)]+$/.test(value) ? 'Please enter a valid phone number' : ''
+  ],
+  
+  message: [
+    (value) => !value?.trim() ? 'Message is required' : '',
+    (value) => value?.length < 10 ? 'Message must be at least 10 characters' : ''
   ]
 };

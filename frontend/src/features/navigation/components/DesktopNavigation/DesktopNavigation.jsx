@@ -7,6 +7,13 @@ const DesktopNavigation = ({ categories }) => {
       <ul className="space-y-4">
         {categories?.map((category, index) => {
 
+          if (category.isDivider) {
+            return (
+              <li key={category.id} className="border-t border-gray-200 pt-4 mt-6">
+              </li>
+            );
+          }
+
           return(
             <li key={category.id}>
             <NavLink
