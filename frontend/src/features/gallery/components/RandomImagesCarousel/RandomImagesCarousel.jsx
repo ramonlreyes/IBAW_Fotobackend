@@ -23,7 +23,7 @@ const RandomImagesCarousel = ({
 
   if (loading) {
     return (
-      <div className="w-full h-[400px] flex items-center justify-center">
+      <div className="w-full h-64 md:h-96 lg:h-[500px] flex items-center justify-center">
         <LoadingSpinner message="Loading Portfolio Showcase..." />
       </div>
     );
@@ -31,7 +31,7 @@ const RandomImagesCarousel = ({
 
   if (error) {
     return (
-      <div className="w-full h-[400px] flex items-center justify-center">
+      <div className="w-full h-64 md:h-96 lg:h-[500px] flex items-center justify-center">
         <ErrorState
           error={error}
           onRetry={handleRetry}
@@ -42,10 +42,10 @@ const RandomImagesCarousel = ({
 
   if (randomImages.length === 0) {
     return (
-      <div className="w-full h-[400px] flex items-center justify-center bg-gray-50">
-        <div className="text-center text-gray-500">
-          <p className="text-lg mb-2">No Portfolio Images Found</p>
-          <p className="text-sm">Images will appear here when albums are uploaded</p>
+      <div className="w-full h-64 md:h-96 lg:h-[500px] flex items-center justify-center bg-gray-50">
+        <div className="text-center text-gray-500 px-4">
+          <p className="text-base md:text-lg mb-2">No Portfolio Images Found</p>
+          <p className="text-sm md:text-base">Images will appear here when albums are uploaded</p>
         </div>
       </div>
     );

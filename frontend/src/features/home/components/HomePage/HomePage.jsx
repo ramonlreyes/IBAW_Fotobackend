@@ -25,7 +25,7 @@ function HomePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white flex">
+      <div className="min-h-screen bg-white flex flex-col md:flex-row">
         <Header categories={availableCategories} />
         <div className="flex-1">
           <LoadingSpinner message="Preparing your photography showcase..." />
@@ -36,7 +36,7 @@ function HomePage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-white flex">
+      <div className="min-h-screen bg-white flex flex-col md:flex-row">
         <Header categories={availableCategories} />
         <div className="flex-1">
           <ErrorState 
@@ -49,15 +49,13 @@ function HomePage() {
   }
 
   return (
-    <div className='min-h-screen bg-white flex'>
+    <div className='min-h-screen bg-white flex flex-col md:flex-row'>
       <Header categories={availableCategories} />
 
-      <div className='flex-1 flex justify-between'>
-
-        <div></div>
+      <div className='flex-1 flex md:items-center justify-center'>
 
         {/* Centered carousel container with proper spacing */}
-        <div className='py-8'>
+        <div className='w-full py-4 sm:py-6 md:py-8'>
           <RandomImagesCarousel
             numberOfImages={24}
             autoAdvance={true}
@@ -68,8 +66,6 @@ function HomePage() {
             className='w-full'
           />
         </div>
-
-        <div></div>
 
       </div>
     </div>
