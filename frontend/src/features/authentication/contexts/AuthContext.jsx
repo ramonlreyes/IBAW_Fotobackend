@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
 import authService from '../services/authService';
 
 const AuthContext = createContext();
@@ -26,8 +26,7 @@ export const AuthProvider = ({ children }) => {
           if (verifiedUser) {
             setUser(verifiedUser);
           } else {
-            // Token is invalid, clear local storage
-            setUser(null);
+            setUser(savedUser);
           }
         }
       } catch (error) {
@@ -41,7 +40,7 @@ export const AuthProvider = ({ children }) => {
     initializeAuth();
   }, []);
 
-  const login = async (email, password) => {
+  const login = useCallback(async (email, password) => {
     try {
       setLoading(true);
       setError(null);
@@ -54,9 +53,9 @@ export const AuthProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try {
       setLoading(true);
       await authService.logout();
@@ -70,9 +69,9 @@ export const AuthProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const register = async (userData) => {
+  const register = useCallback(async (userData) => {
     try {
       setLoading(true);
       setError(null);
@@ -85,23 +84,56 @@ export const AuthProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const clearError = () => {
+  const refreshUserData = useCallback(async () =>{
+    try {
+      const verifiedUser = await authService.verifyToken();
+      if (verifiedUser) {
+        setUser(verifiedUser);
+        return verifiedUser;
+      }
+      return null;
+    } catch (error) {
+      console.error('Error refreshing user data:', error);
+    }
+  }, []);
+
+  const clearError = useCallback(() => {
     setError(null);
-  };
+  }, [user]);
 
-  const isAuthenticated = () => {
+  const isAuthenticated = useCallback(() => {
     return user !== null;
-  };
+  }, [user]);
 
-  const hasRole = (role) => {
+  const hasRole = useCallback((role) => {
     return user?.role === role;
-  };
+  }, [user]);
 
-  const isAdmin = () => {
+  const isAdmin = useCallback(() => {
     return hasRole('admin');
-  };
+  }, [hasRole]);
+
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === 'user') {
+        if (e.newValue) {
+          try {
+            const newUser = JSON.parse(e.newValue);
+            setUser(newUser);
+          } catch (error) {
+            console.error('Error parsing user data from storage:', error);
+          }
+        } else {
+          setUser(null);
+        }
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
 
 
   const value = {
@@ -111,6 +143,7 @@ export const AuthProvider = ({ children }) => {
     login,
     logout,
     register,
+    refreshUserData,
     clearError,
     isAuthenticated,
     hasRole,

@@ -2,11 +2,21 @@ import User from "../models/user.model.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 
-const generateToken = (user) => {
-  return jwt.sign({ userId: user._id, role: user.role  }, process.env.JWT_SECRET, {
-    expiresIn: '7d'
+const generateTokens = (user) => {
+  const accessToken =  jwt.sign({ userId: user._id, role: user.role  }, process.env.JWT_SECRET, {
+    expiresIn: '15m'
   });
+
+  const refreshToken = jwt.sign(
+    { userId: user._id, tokenType: 'refresh'},
+    process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET,
+    { expiresIn: '7d'}
+  );
+
+  return { accessToken, refreshToken };
 };
+
+
 
 export const registerUser = async (req, res) => {
   const {name, email, password, role} = req.body;
@@ -25,14 +35,22 @@ export const registerUser = async (req, res) => {
 
     if(newUser) {
 
-      const token = generateToken(newUser);
+      const { accessToken, refreshToken } = generateTokens(newUser);
 
-      res.cookie('accessToken', token, {
+      res.cookie('accessToken', accessToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 15 * 60 * 1000
+      });
+
+      res.cookie('refreshToken', refreshToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
         maxAge: 7 * 24 * 60 * 60 * 1000
     });
+
 
       res.status(201).json({ 
         success: true,
@@ -72,14 +90,21 @@ export const loginUser = async (req, res) => {
       return res.status(401).json({success: false, message: 'Invalid Email or Password'});
     }
 
-    const token = generateToken(user);
+    const { accessToken, refreshToken } = generateTokens(user);
 
-    res.cookie('accessToken', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000
-    })
+      res.cookie('accessToken', accessToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 15 * 60 * 1000
+      });
+
+      res.cookie('refreshToken', refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 7 * 24 * 60 * 60 * 1000
+    });
 
     res.status(200).json({
       success: true,
@@ -102,7 +127,62 @@ export const logoutUser = async(req, res) => {
     expires: new Date(0)
   });
 
+  res.cookie('refreshToken', '', {
+    httpOnly: true,
+    expires: new Date(0)
+  });
+
   res.status(200).json({success: true, message: 'Logged out successfully'});
+};
+
+export const refreshToken = async (req, res) => {
+  try {
+    const refreshToken = req.cookies.refreshToken;
+
+    if (!refreshToken) {
+      return res.status(401).json({success: false, message: 'No refresh Tkoen provided'})
+    }
+
+    const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET);
+
+    if (decoded.tokenType !== 'refresh') {
+      return res.status(401).json({ success: false, message: 'Invalid token Type'});
+    }
+
+    const user = await User.findById(decoded.userId).select('-password');
+
+    if (!user) {
+      return res.status(401).json({success: false, message: 'User not found'});
+    }
+
+    const accessToken = jwt.sign(
+      { userId: user._id, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: '15m' }
+    );
+
+    res.cookie('accessToken', accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 15 * 60 * 1000
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Token refreshed successfully',
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role
+      }
+    });
+
+  } catch (error) {
+    console.error('Token refresh error:', error.message);
+    res.status(401).json({success: false, message: 'Invalid or expired refresh token'})
+  }
 };
 
 export const verifyToken = async (req, res) => {

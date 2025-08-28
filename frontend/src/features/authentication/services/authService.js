@@ -20,6 +20,10 @@ const authService = {
         throw new Error('Login failed: Invalid response from server');
       }
     } catch (error) {
+       if (error.message && !error.response) {
+        throw error;
+      }
+      
       if (error.response?.data?.message) {
         throw new Error(error.response.data.message);
       } else if (error.response?.status === 401) {
@@ -54,7 +58,7 @@ const authService = {
       const response = await api.post('/auth/signup', userData);
       if (response.data.success && response.data.user) {
         const safeUserData = {
-          id: response.data.user.id,
+          id: response.data.user.id || response.data.user._id,
           name: response.data.user.name,
           email: response.data.user.email,
           role: response.data.user.role,
@@ -92,8 +96,31 @@ const authService = {
       }
       return null;
     } catch (error) {
-      localStorage.removeItem('user');
       return null;
+    }
+  },
+
+  async refreshToken() {
+    try {
+      const response = await api.post('/auth/refresh');
+      if (response.data.sucess) {
+        if (response.data.user) {
+          const safeUserData ={
+            id: response.data.user.id,
+            name: response.data.user.name,
+            email: response.data.user.email,
+            role: response.data.user.role,
+            avatar: response.data.user.avatar
+          };
+          localStorage.setItem('user', JSON.stringify(safeUserData));
+          return safeUserData;
+        }
+        return this.getCurrentUser();
+      }
+      return null;
+    } catch (error) {
+      localStorage.removeItem('user');
+      throw error;
     }
   },
 

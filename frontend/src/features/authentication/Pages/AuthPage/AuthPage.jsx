@@ -134,7 +134,8 @@ const AuthPage = () => {
       </div>
 
       {/* Custom styles for animations */}
-      <style jsx>{`
+      <>
+              <style jsx>{`
         @keyframes blob {
           0% {
             transform: translate(0px, 0px) scale(1);
@@ -159,6 +160,7 @@ const AuthPage = () => {
           animation-delay: 4s;
         }
       `}</style>
+      </>
     </div>
   );
 };
